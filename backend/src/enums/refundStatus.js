@@ -1,0 +1,7 @@
+const REFUND_STATUS = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+};
+module.exports = REFUND_STATUS;
+

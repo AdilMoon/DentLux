@@ -1,0 +1,902 @@
+[
+  {
+    "name": "Мәриям Жұмабеков",
+    "email": "mariyam.zhumabekov1@dentlux.kz",
+    "password": "9jk*oZ!d",
+    "phone": "+777001000001"
+  },
+  {
+    "name": "Нұрбол Әбілдаев",
+    "email": "nurbol.abildaev2@dentlux.kz",
+    "password": "TL8555Fn",
+    "phone": "+777001000002"
+  },
+  {
+    "name": "Ділназ Әліев",
+    "email": "dilnaz.aliev3@dentlux.kz",
+    "password": "#08moqbw",
+    "phone": "+777001000003"
+  },
+  {
+    "name": "Гүлжай Ермеков",
+    "email": "gulzhay.ermekov4@dentlux.kz",
+    "password": "jCghVnQQ",
+    "phone": "+777001000004"
+  },
+  {
+    "name": "Арман Сәбитов",
+    "email": "arman.sabitov5@dentlux.kz",
+    "password": "KpkNLcPQ",
+    "phone": "+777001000005"
+  },
+  {
+    "name": "Айгүл Бекжанов",
+    "email": "aygul.bekzhanov6@dentlux.kz",
+    "password": "&qmMd&%O",
+    "phone": "+777001000006"
+  },
+  {
+    "name": "Айнура Даулетов",
+    "email": "aynura.dauletov7@dentlux.kz",
+    "password": "AMBViDNf",
+    "phone": "+777001000007"
+  },
+  {
+    "name": "Асель Төлегенов",
+    "email": "aselь.tolegenov8@dentlux.kz",
+    "password": "CNiVVhap",
+    "phone": "+777001000008"
+  },
+  {
+    "name": "Асель Қайратов",
+    "email": "aselь.qayratov9@dentlux.kz",
+    "password": "uB2g^R0a",
+    "phone": "+777001000009"
+  },
+  {
+    "name": "Талғат Асылбеков",
+    "email": "talgat.asylbekov10@dentlux.kz",
+    "password": "YqLs5k#9",
+    "phone": "+777001000010"
+  },
+  {
+    "name": "Айсұлу Қадыров",
+    "email": "aysulu.qadyrov11@dentlux.kz",
+    "password": "@h$WDhwz",
+    "phone": "+777001000011"
+  },
+  {
+    "name": "Арман Ақтаев",
+    "email": "arman.aqtaev12@dentlux.kz",
+    "password": "XmZ&#Iuh",
+    "phone": "+777001000012"
+  },
+  {
+    "name": "Рустем Әліев",
+    "email": "rustem.aliev13@dentlux.kz",
+    "password": "l1w$3nH7",
+    "phone": "+777001000013"
+  },
+  {
+    "name": "Жұлдыз Нұрланов",
+    "email": "zhuldyz.nurlanov14@dentlux.kz",
+    "password": "y8JhVjJq",
+    "phone": "+777001000014"
+  },
+  {
+    "name": "Асхат Қазыбеков",
+    "email": "ashat.qazybekov15@dentlux.kz",
+    "password": "Wp!bsOR*",
+    "phone": "+777001000015"
+  },
+  {
+    "name": "Меруерт Қайратов",
+    "email": "meruert.qayratov16@dentlux.kz",
+    "password": "1ZjjMtZa",
+    "phone": "+777001000016"
+  },
+  {
+    "name": "Алтынбек Әлібеков",
+    "email": "altynbek.alibekov17@dentlux.kz",
+    "password": "c0*T7KW^",
+    "phone": "+777001000017"
+  },
+  {
+    "name": "Арман Әбілдаев",
+    "email": "arman.abildaev18@dentlux.kz",
+    "password": "NjA4t5nM",
+    "phone": "+777001000018"
+  },
+  {
+    "name": "Гүлшат Аманғазиев",
+    "email": "gulshat.amangaziev19@dentlux.kz",
+    "password": "LD!8J6d*",
+    "phone": "+777001000019"
+  },
+  {
+    "name": "Айгерім Сапаров",
+    "email": "aygerim.saparov20@dentlux.kz",
+    "password": "TLLiiRyM",
+    "phone": "+777001000020"
+  },
+  {
+    "name": "Асхат Жұмағалиев",
+    "email": "ashat.zhumagaliev21@dentlux.kz",
+    "password": "Xh7D#dNw",
+    "phone": "+777001000021"
+  },
+  {
+    "name": "Гүлжай Сәбитов",
+    "email": "gulzhay.sabitov22@dentlux.kz",
+    "password": "eJCCyBn@",
+    "phone": "+777001000022"
+  },
+  {
+    "name": "Асқар Аманғазиев",
+    "email": "asqar.amangaziev23@dentlux.kz",
+    "password": "g1eQBKil",
+    "phone": "+777001000023"
+  },
+  {
+    "name": "Асыл Жұмабеков",
+    "email": "asyl.zhumabekov24@dentlux.kz",
+    "password": "9UYkmdVs",
+    "phone": "+777001000024"
+  },
+  {
+    "name": "Айнур Мұхамеджанов",
+    "email": "aynur.muhamedzhanov25@dentlux.kz",
+    "password": "EbxcNAVB",
+    "phone": "+777001000025"
+  },
+  {
+    "name": "Жандос Қасымов",
+    "email": "zhandos.qasymov26@dentlux.kz",
+    "password": "O@zdvYo$",
+    "phone": "+777001000026"
+  },
+  {
+    "name": "Айжан Сыдықов",
+    "email": "ayzhan.sydyqov27@dentlux.kz",
+    "password": "y2aqn%hU",
+    "phone": "+777001000027"
+  },
+  {
+    "name": "Айжан Жұмабеков",
+    "email": "ayzhan.zhumabekov28@dentlux.kz",
+    "password": "6xEfLwCR",
+    "phone": "+777001000028"
+  },
+  {
+    "name": "Айдана Әліев",
+    "email": "aydana.aliev29@dentlux.kz",
+    "password": "n2zh@4iS",
+    "phone": "+777001000029"
+  },
+  {
+    "name": "Динара Асылбеков",
+    "email": "dinara.asylbekov30@dentlux.kz",
+    "password": "OJf3cc2^",
+    "phone": "+777001000030"
+  },
+  {
+    "name": "Айдын Төлегенов",
+    "email": "aydyn.tolegenov31@dentlux.kz",
+    "password": "zXk8RQIM",
+    "phone": "+777001000031"
+  },
+  {
+    "name": "Жанат Жұмағұлов",
+    "email": "zhanat.zhumagulov32@dentlux.kz",
+    "password": "mJBH8pVd",
+    "phone": "+777001000032"
+  },
+  {
+    "name": "Серик Серікбайұлы",
+    "email": "serik.serikbayuly33@dentlux.kz",
+    "password": "Al^$6FVq",
+    "phone": "+777001000033"
+  },
+  {
+    "name": "Айжан Нұрғалиев",
+    "email": "ayzhan.nurgaliev34@dentlux.kz",
+    "password": "*0jyR^rH",
+    "phone": "+777001000034"
+  },
+  {
+    "name": "Айгерім Кенжебаев",
+    "email": "aygerim.kenzhebaev35@dentlux.kz",
+    "password": "h1F0yBdt",
+    "phone": "+777001000035"
+  },
+  {
+    "name": "Аружан Қадыров",
+    "email": "aruzhan.qadyrov36@dentlux.kz",
+    "password": "4PS@cWzq",
+    "phone": "+777001000036"
+  },
+  {
+    "name": "Жансая Тайжібеков",
+    "email": "zhansaya.tayzhibekov37@dentlux.kz",
+    "password": "Lj3voHmS",
+    "phone": "+777001000037"
+  },
+  {
+    "name": "Азамат Мұратбеков",
+    "email": "azamat.muratbekov38@dentlux.kz",
+    "password": "IxHqTdma",
+    "phone": "+777001000038"
+  },
+  {
+    "name": "Гүлжай Қасымов",
+    "email": "gulzhay.qasymov39@dentlux.kz",
+    "password": "X#d08!cC",
+    "phone": "+777001000039"
+  },
+  {
+    "name": "Жансая Әлімов",
+    "email": "zhansaya.alimov40@dentlux.kz",
+    "password": "BsJMz%KB",
+    "phone": "+777001000040"
+  },
+  {
+    "name": "Бекзат Талғатов",
+    "email": "bekzat.talgatov41@dentlux.kz",
+    "password": "m3!iMFbd",
+    "phone": "+777001000041"
+  },
+  {
+    "name": "Гүлнұр Қалиев",
+    "email": "gulnur.qaliev42@dentlux.kz",
+    "password": "Y7@wu1%#",
+    "phone": "+777001000042"
+  },
+  {
+    "name": "Асель Қалиев",
+    "email": "aselь.qaliev43@dentlux.kz",
+    "password": "d59SQp9U",
+    "phone": "+777001000043"
+  },
+  {
+    "name": "Гүлшат Мамытов",
+    "email": "gulshat.mamytov44@dentlux.kz",
+    "password": "Ag*J^DbA",
+    "phone": "+777001000044"
+  },
+  {
+    "name": "Айгуль Сыдықов",
+    "email": "aygulь.sydyqov45@dentlux.kz",
+    "password": "@Ben%D50",
+    "phone": "+777001000045"
+  },
+  {
+    "name": "Айдын Әлімов",
+    "email": "aydyn.alimov46@dentlux.kz",
+    "password": "Q%$wCyWw",
+    "phone": "+777001000046"
+  },
+  {
+    "name": "Айдана Айтбаев",
+    "email": "aydana.aytbaev47@dentlux.kz",
+    "password": "mNdgs@ny",
+    "phone": "+777001000047"
+  },
+  {
+    "name": "Асел Тайжібеков",
+    "email": "asel.tayzhibekov48@dentlux.kz",
+    "password": "lFr8JZp^",
+    "phone": "+777001000048"
+  },
+  {
+    "name": "Асыл Сыдықов",
+    "email": "asyl.sydyqov49@dentlux.kz",
+    "password": "9Rpfbn!B",
+    "phone": "+777001000049"
+  },
+  {
+    "name": "Жансая Жұмағұлов",
+    "email": "zhansaya.zhumagulov50@dentlux.kz",
+    "password": "PRf18ahB",
+    "phone": "+777001000050"
+  },
+  {
+    "name": "Жұлдыз Қадыров",
+    "email": "zhuldyz.qadyrov51@dentlux.kz",
+    "password": "q!Bg0W%z",
+    "phone": "+777001000051"
+  },
+  {
+    "name": "Сания Ахметов",
+    "email": "saniya.ahmetov52@dentlux.kz",
+    "password": "qKuR&btl",
+    "phone": "+777001000052"
+  },
+  {
+    "name": "Аружан Төлегенов",
+    "email": "aruzhan.tolegenov53@dentlux.kz",
+    "password": "wWb@HXSu",
+    "phone": "+777001000053"
+  },
+  {
+    "name": "Жанат Жұмағұлов",
+    "email": "zhanat.zhumagulov54@dentlux.kz",
+    "password": "E94!S6gZ",
+    "phone": "+777001000054"
+  },
+  {
+    "name": "Бекзат Серікбаев",
+    "email": "bekzat.serikbaev55@dentlux.kz",
+    "password": "xz#BxzSs",
+    "phone": "+777001000055"
+  },
+  {
+    "name": "Ділназ Серікбаев",
+    "email": "dilnaz.serikbaev56@dentlux.kz",
+    "password": "aAohS&0Y",
+    "phone": "+777001000056"
+  },
+  {
+    "name": "Меруерт Нұржанов",
+    "email": "meruert.nurzhanov57@dentlux.kz",
+    "password": "d&7DL8MG",
+    "phone": "+777001000057"
+  },
+  {
+    "name": "Жұлдыз Мамытов",
+    "email": "zhuldyz.mamytov58@dentlux.kz",
+    "password": "iWRuF3ya",
+    "phone": "+777001000058"
+  },
+  {
+    "name": "Мәдина Әліев",
+    "email": "madina.aliev59@dentlux.kz",
+    "password": "b^2LBa!u",
+    "phone": "+777001000059"
+  },
+  {
+    "name": "Сауле Тәжібаев",
+    "email": "saule.tazhibaev60@dentlux.kz",
+    "password": "ErxzXP%a",
+    "phone": "+777001000060"
+  },
+  {
+    "name": "Жанар Смағұлов",
+    "email": "zhanar.smagulov61@dentlux.kz",
+    "password": "4$i$9j0C",
+    "phone": "+777001000061"
+  },
+  {
+    "name": "Гүлшат Қалиев",
+    "email": "gulshat.qaliev62@dentlux.kz",
+    "password": "zB3BiZl0",
+    "phone": "+777001000062"
+  },
+  {
+    "name": "Айдана Есқалиев",
+    "email": "aydana.esqaliev63@dentlux.kz",
+    "password": "nqTq7sWA",
+    "phone": "+777001000063"
+  },
+  {
+    "name": "Айсұлу Әбілдаев",
+    "email": "aysulu.abildaev64@dentlux.kz",
+    "password": "%IJhft%1",
+    "phone": "+777001000064"
+  },
+  {
+    "name": "Алтынбек Жұмағұлов",
+    "email": "altynbek.zhumagulov65@dentlux.kz",
+    "password": "VK&qeJ!A",
+    "phone": "+777001000065"
+  },
+  {
+    "name": "Айбек Серікбайұлы",
+    "email": "aybek.serikbayuly66@dentlux.kz",
+    "password": "zYD*DAMa",
+    "phone": "+777001000066"
+  },
+  {
+    "name": "Жанар Төлеуов",
+    "email": "zhanar.toleuov67@dentlux.kz",
+    "password": "m7KadkFs",
+    "phone": "+777001000067"
+  },
+  {
+    "name": "Талғат Мұхамеджанов",
+    "email": "talgat.muhamedzhanov68@dentlux.kz",
+    "password": "zt9GwUI#",
+    "phone": "+777001000068"
+  },
+  {
+    "name": "Ержан Қазыбеков",
+    "email": "erzhan.qazybekov69@dentlux.kz",
+    "password": "FBX19dsv",
+    "phone": "+777001000069"
+  },
+  {
+    "name": "Алма Қазыбеков",
+    "email": "alma.qazybekov70@dentlux.kz",
+    "password": "Sev3mBUV",
+    "phone": "+777001000070"
+  },
+  {
+    "name": "Дастан Нұрғалиев",
+    "email": "dastan.nurgaliev71@dentlux.kz",
+    "password": "Ar&nfL!d",
+    "phone": "+777001000071"
+  },
+  {
+    "name": "Жанат Талғатов",
+    "email": "zhanat.talgatov72@dentlux.kz",
+    "password": "f!mH8BQD",
+    "phone": "+777001000072"
+  },
+  {
+    "name": "Айгуль Смағұлов",
+    "email": "aygulь.smagulov73@dentlux.kz",
+    "password": "*FJQLuuP",
+    "phone": "+777001000073"
+  },
+  {
+    "name": "Дина Сыдықов",
+    "email": "dina.sydyqov74@dentlux.kz",
+    "password": "uqQaXiOr",
+    "phone": "+777001000074"
+  },
+  {
+    "name": "Жансая Әлібеков",
+    "email": "zhansaya.alibekov75@dentlux.kz",
+    "password": "dy7XUDOW",
+    "phone": "+777001000075"
+  },
+  {
+    "name": "Амина Нұрланов",
+    "email": "amina.nurlanov76@dentlux.kz",
+    "password": "yq#rpaGC",
+    "phone": "+777001000076"
+  },
+  {
+    "name": "Жұлдыз Омаров",
+    "email": "zhuldyz.omarov77@dentlux.kz",
+    "password": "tV6obW2o",
+    "phone": "+777001000077"
+  },
+  {
+    "name": "Айгерім Абдуллаев",
+    "email": "aygerim.abdullaev78@dentlux.kz",
+    "password": "EIGDKB3I",
+    "phone": "+777001000078"
+  },
+  {
+    "name": "Айгуль Омаров",
+    "email": "aygulь.omarov79@dentlux.kz",
+    "password": "#TXd$x$I",
+    "phone": "+777001000079"
+  },
+  {
+    "name": "Асел Қазыбеков",
+    "email": "asel.qazybekov80@dentlux.kz",
+    "password": "%ulUzC$6",
+    "phone": "+777001000080"
+  },
+  {
+    "name": "Айдана Абдуллаев",
+    "email": "aydana.abdullaev81@dentlux.kz",
+    "password": "sffIFCb4",
+    "phone": "+777001000081"
+  },
+  {
+    "name": "Айжан Смағұлов",
+    "email": "ayzhan.smagulov82@dentlux.kz",
+    "password": "p7rdiWYS",
+    "phone": "+777001000082"
+  },
+  {
+    "name": "Ақмарал Мұхамеджанов",
+    "email": "aqmaral.muhamedzhanov83@dentlux.kz",
+    "password": "!F&1S%Lw",
+    "phone": "+777001000083"
+  },
+  {
+    "name": "Жансая Ермеков",
+    "email": "zhansaya.ermekov84@dentlux.kz",
+    "password": "YoCzTqYr",
+    "phone": "+777001000084"
+  },
+  {
+    "name": "Айгерім Сыдықов",
+    "email": "aygerim.sydyqov85@dentlux.kz",
+    "password": "Xdakzv%Y",
+    "phone": "+777001000085"
+  },
+  {
+    "name": "Айнур Тәжібаев",
+    "email": "aynur.tazhibaev86@dentlux.kz",
+    "password": "RzKQ@XSd",
+    "phone": "+777001000086"
+  },
+  {
+    "name": "Меруерт Төлеубаев",
+    "email": "meruert.toleubaev87@dentlux.kz",
+    "password": "DgKr1Hdv",
+    "phone": "+777001000087"
+  },
+  {
+    "name": "Айдын Әліев",
+    "email": "aydyn.aliev88@dentlux.kz",
+    "password": "&IPL5UVj",
+    "phone": "+777001000088"
+  },
+  {
+    "name": "Гүлнұр Жұмабеков",
+    "email": "gulnur.zhumabekov89@dentlux.kz",
+    "password": "QDQy%J@z",
+    "phone": "+777001000089"
+  },
+  {
+    "name": "Дастан Рахманов",
+    "email": "dastan.rahmanov90@dentlux.kz",
+    "password": "@2J3Iiiw",
+    "phone": "+777001000090"
+  },
+  {
+    "name": "Айжан Жақсылықов",
+    "email": "ayzhan.zhaqsylyqov91@dentlux.kz",
+    "password": "H0ve032h",
+    "phone": "+777001000091"
+  },
+  {
+    "name": "Аружан Рахманов",
+    "email": "aruzhan.rahmanov92@dentlux.kz",
+    "password": "*zl9BZ!k",
+    "phone": "+777001000092"
+  },
+  {
+    "name": "Бауыржан Қайратов",
+    "email": "bauyrzhan.qayratov93@dentlux.kz",
+    "password": "YBVy00&l",
+    "phone": "+777001000093"
+  },
+  {
+    "name": "Алтынай Абдуллаев",
+    "email": "altynay.abdullaev94@dentlux.kz",
+    "password": "MOw1Tnd9",
+    "phone": "+777001000094"
+  },
+  {
+    "name": "Дина Қадыров",
+    "email": "dina.qadyrov95@dentlux.kz",
+    "password": "PeIqI^GZ",
+    "phone": "+777001000095"
+  },
+  {
+    "name": "Сания Қайратов",
+    "email": "saniya.qayratov96@dentlux.kz",
+    "password": "2VC$mK88",
+    "phone": "+777001000096"
+  },
+  {
+    "name": "Нұрбол Тұрсынов",
+    "email": "nurbol.tursynov97@dentlux.kz",
+    "password": "YWU7BSU0",
+    "phone": "+777001000097"
+  },
+  {
+    "name": "Гүлшат Омаров",
+    "email": "gulshat.omarov98@dentlux.kz",
+    "password": "vij%U24e",
+    "phone": "+777001000098"
+  },
+  {
+    "name": "Айнур Әліев",
+    "email": "aynur.aliev99@dentlux.kz",
+    "password": "AUib^$Jw",
+    "phone": "+777001000099"
+  },
+  {
+    "name": "Ділназ Сапаров",
+    "email": "dilnaz.saparov100@dentlux.kz",
+    "password": "5bPTT6wG",
+    "phone": "+777001000100"
+  },
+  {
+    "name": "Айжан Құдайбергенов",
+    "email": "ayzhan.qudaybergenov101@dentlux.kz",
+    "password": "m8P@EMnK",
+    "phone": "+777001000101"
+  },
+  {
+    "name": "Айдын Нұржанов",
+    "email": "aydyn.nurzhanov102@dentlux.kz",
+    "password": "oObtpbf8",
+    "phone": "+777001000102"
+  },
+  {
+    "name": "Мәриям Айтбаев",
+    "email": "mariyam.aytbaev103@dentlux.kz",
+    "password": "5KxdAIJI",
+    "phone": "+777001000103"
+  },
+  {
+    "name": "Айгерім Ақтаев",
+    "email": "aygerim.aqtaev104@dentlux.kz",
+    "password": "rkMwRaya",
+    "phone": "+777001000104"
+  },
+  {
+    "name": "Жанар Аманғазиев",
+    "email": "zhanar.amangaziev105@dentlux.kz",
+    "password": "kU*YyDxU",
+    "phone": "+777001000105"
+  },
+  {
+    "name": "Серик Ахметов",
+    "email": "serik.ahmetov106@dentlux.kz",
+    "password": "WFO2AVro",
+    "phone": "+777001000106"
+  },
+  {
+    "name": "Айдын Әлібеков",
+    "email": "aydyn.alibekov107@dentlux.kz",
+    "password": "TTrul8&U",
+    "phone": "+777001000107"
+  },
+  {
+    "name": "Асел Қазыбеков",
+    "email": "asel.qazybekov108@dentlux.kz",
+    "password": "u98cRaI&",
+    "phone": "+777001000108"
+  },
+  {
+    "name": "Алма Ермеков",
+    "email": "alma.ermekov109@dentlux.kz",
+    "password": "^Ebk%Sk1",
+    "phone": "+777001000109"
+  },
+  {
+    "name": "Аружан Жұмағалиев",
+    "email": "aruzhan.zhumagaliev110@dentlux.kz",
+    "password": "O1l@eVXO",
+    "phone": "+777001000110"
+  },
+  {
+    "name": "Жансая Сапаров",
+    "email": "zhansaya.saparov111@dentlux.kz",
+    "password": "7b04aUvm",
+    "phone": "+777001000111"
+  },
+  {
+    "name": "Айжан Сәбитов",
+    "email": "ayzhan.sabitov112@dentlux.kz",
+    "password": "KXs!cOKh",
+    "phone": "+777001000112"
+  },
+  {
+    "name": "Нұрлан Төлеуов",
+    "email": "nurlan.toleuov113@dentlux.kz",
+    "password": "XB9NBmBp",
+    "phone": "+777001000113"
+  },
+  {
+    "name": "Арман Рахманов",
+    "email": "arman.rahmanov114@dentlux.kz",
+    "password": "SRXiCN$g",
+    "phone": "+777001000114"
+  },
+  {
+    "name": "Айжан Мұхамеджанов",
+    "email": "ayzhan.muhamedzhanov115@dentlux.kz",
+    "password": "kO$&LJu!",
+    "phone": "+777001000115"
+  },
+  {
+    "name": "Жұлдыз Мұхамеджанов",
+    "email": "zhuldyz.muhamedzhanov116@dentlux.kz",
+    "password": "RGeJ8bHu",
+    "phone": "+777001000116"
+  },
+  {
+    "name": "Айжан Абдуллаев",
+    "email": "ayzhan.abdullaev117@dentlux.kz",
+    "password": "Td#gu@Q&",
+    "phone": "+777001000117"
+  },
+  {
+    "name": "Қарлығаш Әліев",
+    "email": "qarlygash.aliev118@dentlux.kz",
+    "password": "WgpmEKBm",
+    "phone": "+777001000118"
+  },
+  {
+    "name": "Асхат Бейсенов",
+    "email": "ashat.beysenov119@dentlux.kz",
+    "password": "v4A&9IT9",
+    "phone": "+777001000119"
+  },
+  {
+    "name": "Айжан Төлегенов",
+    "email": "ayzhan.tolegenov120@dentlux.kz",
+    "password": "V23f*kw^",
+    "phone": "+777001000120"
+  },
+  {
+    "name": "Ақмарал Қадыров",
+    "email": "aqmaral.qadyrov121@dentlux.kz",
+    "password": "THdryOIO",
+    "phone": "+777001000121"
+  },
+  {
+    "name": "Айсулу Жақсылықов",
+    "email": "aysulu.zhaqsylyqov122@dentlux.kz",
+    "password": "Pcnu!Io#",
+    "phone": "+777001000122"
+  },
+  {
+    "name": "Алтынай Аманғазиев",
+    "email": "altynay.amangaziev123@dentlux.kz",
+    "password": "r3cG9l8*",
+    "phone": "+777001000123"
+  },
+  {
+    "name": "Мәриям Нұрланов",
+    "email": "mariyam.nurlanov124@dentlux.kz",
+    "password": "8Z9zgnPP",
+    "phone": "+777001000124"
+  },
+  {
+    "name": "Айжан Әліев",
+    "email": "ayzhan.aliev125@dentlux.kz",
+    "password": "urCG%omP",
+    "phone": "+777001000125"
+  },
+  {
+    "name": "Сауле Жұмағалиев",
+    "email": "saule.zhumagaliev126@dentlux.kz",
+    "password": "gOzcNzRX",
+    "phone": "+777001000126"
+  },
+  {
+    "name": "Дастан Талғатов",
+    "email": "dastan.talgatov127@dentlux.kz",
+    "password": "QUE^V%dO",
+    "phone": "+777001000127"
+  },
+  {
+    "name": "Ақмарал Бейсенов",
+    "email": "aqmaral.beysenov128@dentlux.kz",
+    "password": "2ebM$FPP",
+    "phone": "+777001000128"
+  },
+  {
+    "name": "Айдана Даулетов",
+    "email": "aydana.dauletov129@dentlux.kz",
+    "password": "vFtdvsyQ",
+    "phone": "+777001000129"
+  },
+  {
+    "name": "Айдана Қасымов",
+    "email": "aydana.qasymov130@dentlux.kz",
+    "password": "w#UBW5bi",
+    "phone": "+777001000130"
+  },
+  {
+    "name": "Асель Қадыров",
+    "email": "aselь.qadyrov131@dentlux.kz",
+    "password": "Bs^x4I32",
+    "phone": "+777001000131"
+  },
+  {
+    "name": "Бекзат Мамытов",
+    "email": "bekzat.mamytov132@dentlux.kz",
+    "password": "L3sT3!Up",
+    "phone": "+777001000132"
+  },
+  {
+    "name": "Нұрлан Талғатов",
+    "email": "nurlan.talgatov133@dentlux.kz",
+    "password": "ueWJ87U7",
+    "phone": "+777001000133"
+  },
+  {
+    "name": "Айсулу Әлімов",
+    "email": "aysulu.alimov134@dentlux.kz",
+    "password": "h8t&SUPC",
+    "phone": "+777001000134"
+  },
+  {
+    "name": "Асылбек Әбілдаев",
+    "email": "asylbek.abildaev135@dentlux.kz",
+    "password": "&IEvD#6I",
+    "phone": "+777001000135"
+  },
+  {
+    "name": "Мәриям Төлегенов",
+    "email": "mariyam.tolegenov136@dentlux.kz",
+    "password": "qpjJfci%",
+    "phone": "+777001000136"
+  },
+  {
+    "name": "Гүлжай Жұмағұлов",
+    "email": "gulzhay.zhumagulov137@dentlux.kz",
+    "password": "Mk#DQDjz",
+    "phone": "+777001000137"
+  },
+  {
+    "name": "Алтынай Төлеубаев",
+    "email": "altynay.toleubaev138@dentlux.kz",
+    "password": "%QTJVgN8",
+    "phone": "+777001000138"
+  },
+  {
+    "name": "Асылбек Бекжанов",
+    "email": "asylbek.bekzhanov139@dentlux.kz",
+    "password": "dGnjljhP",
+    "phone": "+777001000139"
+  },
+  {
+    "name": "Айнура Серікбаев",
+    "email": "aynura.serikbaev140@dentlux.kz",
+    "password": "IlC^MEgd",
+    "phone": "+777001000140"
+  },
+  {
+    "name": "Асхат Қасымов",
+    "email": "ashat.qasymov141@dentlux.kz",
+    "password": "Rm0jl1CN",
+    "phone": "+777001000141"
+  },
+  {
+    "name": "Гүлшат Ахметов",
+    "email": "gulshat.ahmetov142@dentlux.kz",
+    "password": "4tueZZ&u",
+    "phone": "+777001000142"
+  },
+  {
+    "name": "Нұрлан Бекжанов",
+    "email": "nurlan.bekzhanov143@dentlux.kz",
+    "password": "ZXy4cWfK",
+    "phone": "+777001000143"
+  },
+  {
+    "name": "Жансая Қазыбеков",
+    "email": "zhansaya.qazybekov144@dentlux.kz",
+    "password": "FYVab*3i",
+    "phone": "+777001000144"
+  },
+  {
+    "name": "Айбек Жақсылықов",
+    "email": "aybek.zhaqsylyqov145@dentlux.kz",
+    "password": "3l7pgDGJ",
+    "phone": "+777001000145"
+  },
+  {
+    "name": "Жанар Кенжебаев",
+    "email": "zhanar.kenzhebaev146@dentlux.kz",
+    "password": "UCsV&NfO",
+    "phone": "+777001000146"
+  },
+  {
+    "name": "Нұрбол Мұратбеков",
+    "email": "nurbol.muratbekov147@dentlux.kz",
+    "password": "d1wCOJWJ",
+    "phone": "+777001000147"
+  },
+  {
+    "name": "Динара Мұратбеков",
+    "email": "dinara.muratbekov148@dentlux.kz",
+    "password": "ZKoRYS0O",
+    "phone": "+777001000148"
+  },
+  {
+    "name": "Дина Қалиев",
+    "email": "dina.qaliev149@dentlux.kz",
+    "password": "Ea&9%J%X",
+    "phone": "+777001000149"
+  },
+  {
+    "name": "Айжан Ермеков",
+    "email": "ayzhan.ermekov150@dentlux.kz",
+    "password": "0mLO&Glv",
+    "phone": "+777001000150"
+  }
+]
