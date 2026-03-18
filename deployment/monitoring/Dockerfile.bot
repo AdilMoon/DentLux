@@ -1,0 +1,9 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir requests docker schedule psutil
+
+COPY telegram_bot.py .
+
+CMD ["python", "-u", "telegram_bot.py"]
