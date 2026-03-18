@@ -54,7 +54,7 @@ services:
       - "9000:9000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
+      - portainer_data_v2:/data
 
   prometheus:
     image: prom/prometheus:latest
@@ -79,6 +79,14 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    environment:
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=smtp.gmail.com:587
+      - GF_SMTP_USER=adilzhanerdenbaev2006@gmail.com
+      - GF_SMTP_PASSWORD=vptilrnpnbduyqsp
+      - GF_SMTP_FROM_ADDRESS=adilzhanerdenbaev2006@gmail.com
+      - GF_SMTP_FROM_NAME=DentLux Monitoring
+      - GF_SMTP_SKIP_VERIFY=false
     volumes:
       - grafana_data:/var/lib/grafana
       - ./deployment/monitoring/grafana/provisioning:/etc/grafana/provisioning
@@ -112,8 +120,22 @@ services:
     ports:
       - "8081:8080"
 
+  telegram-monitor:
+    build:
+      context: ./deployment/monitoring
+      dockerfile: Dockerfile.bot
+    container_name: telegram_monitor
+    restart: always
+    environment:
+      - TELEGRAM_TOKEN=8641980200:AAHqllUQ7p16HB90LpeVlrjGDfQ0CB8uaJo
+      - TELEGRAM_CHAT_ID=6058337746
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
-  portainer_data:
+  portainer_data_v2:
   prometheus_data:
   grafana_data:
