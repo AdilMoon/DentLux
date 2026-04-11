@@ -7,6 +7,11 @@
 pipeline {
   agent any
 
+  environment {
+    // Стабильные имена образов при сборке из workspace Jenkins (не от имени папки job’а).
+    COMPOSE_PROJECT_NAME = 'dentlux'
+  }
+
   options {
     timestamps()
     ansiColor('xterm')

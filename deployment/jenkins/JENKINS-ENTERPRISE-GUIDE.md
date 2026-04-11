@@ -1,6 +1,15 @@
 # Jenkins на уровне enterprise для DentLux / DentReserve Pro
 
-Ваш образ Jenkins уже содержит **Git**, **Docker CLI**, **Node 20**, плагины **Pipeline**, **Blue Ocean**, **Docker workflow**, **Credentials Binding**, **Slack**, **email-ext**, **Prometheus**, **JCasC**. Ниже — что сделать, чтобы пайплайн выглядел и работал как в крупных компаниях.
+Ваш образ Jenkins содержит **Git**, **Docker CLI + Compose v2**, **Node 20**, плагины **Pipeline**, **AnsiColor**, **Timestamper**, **Blue Ocean**, **Docker workflow**, **Credentials Binding**, **Slack**, **email-ext**, **Prometheus**, **JCasC**, **Job DSL**. Ниже — что сделать, чтобы пайплайн выглядел и работал как в крупных компаниях.
+
+### Быстрый старт (после правок в репозитории)
+
+1. Закоммитьте и запушьте изменения (в т.ч. `deployment/jenkins/`).
+2. Пересоберите и перезапустите Jenkins, чтобы подтянулись плагины и JCasC:
+   `docker compose build jenkins && docker compose up -d jenkins`
+3. Откройте `http://localhost:8086` — job **`dentlux-ci`** должен появиться сам (из `casc/jenkins.yaml`). Запустите **Build Now**.
+4. Если репозиторий **приватный**: в Jenkins создайте credential с ID **`dentlux-github`** (PAT GitHub) и в `jenkins.yaml` в блоке `remote { }` добавьте строку `credentials('dentlux-github')`, затем снова перезапустите Jenkins.
+5. Уже был вручную создан job с тем же именем — конфигурация применится из JCasC при старте (проверьте ветку **main** и Script Path).
 
 ---
 
@@ -38,17 +47,16 @@
    - `docker-registry` для push образов;
    - `slack-webhook` или токен Slack;
    - при деплое по SSH — `ssh-deploy-key` с приватным ключом.
-3. **New Item → Pipeline** (имя, например, `dentlux-main`).
-4. В разделе **Pipeline** выберите **Pipeline script from SCM**, укажите репозиторий и путь к файлу, например `deployment/jenkins/Jenkinsfile.dentlux`.
-5. **Build Triggers**: для «как в компаниях» — webhook из GitHub/GitLab на push; локально можно **Poll SCM** или ручной запуск.
-6. **Blue Ocean** — визуально смотреть стадии и время; полезно для демонстраций.
+3. Job **`dentlux-ci`** создаётся из **`casc/jenkins.yaml`** (GitHub `AdilMoon/DentLux`, ветка `main`). Ручной **New Item** не нужен, если JCasC отработал без ошибок.
+4. **Build Triggers**: webhook из GitHub/GitLab на push; локально — **Poll SCM** или **Build Now**.
+5. **Blue Ocean** — визуально смотреть стадии и время; полезно для демонстраций.
 
 ---
 
 ## 4. Интеграция с вашим репозиторием
 
-- Файл **`deployment/jenkins/Jenkinsfile.dentlux`** — пример Declarative Pipeline под структуру DentLux (checkout, backend, docker build). Подставьте свой URL репозитория и учётные данные.
-- **`deployment/jenkins/casc/jenkins.yaml`** — сейчас `jobs: []`. Для полного GitOps можно позже добавить **Job DSL** или импортировать job XML, но старт проще с Pipeline from SCM.
+- Файл **`deployment/jenkins/Jenkinsfile.dentlux`** — пайплайн DentLux (checkout, backend, docker build). URL репозитория для job’а задаётся в **`jenkins.yaml`**.
+- **`deployment/jenkins/casc/jenkins.yaml`** — через **Job DSL** создаётся pipeline **`dentlux-ci`** из GitHub; при смене URL/ветки отредактируйте YAML и перезапустите контейнер Jenkins.
 
 ---
 

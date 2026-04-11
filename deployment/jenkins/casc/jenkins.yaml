@@ -8,4 +8,28 @@ unclassified:
   location:
     url: http://localhost:8086/
 
-jobs: []
+# Job DSL через JCasC: job dentlux-ci создаётся/обновляется при старте Jenkins.
+# Приватный репозиторий: Manage Jenkins → Credentials → id dentlux-github (PAT),
+# затем в remote { } добавьте: credentials('dentlux-github')
+jobs:
+  - script: |
+      pipelineJob('dentlux-ci') {
+        displayName('DentLux CI')
+        description('GitHub → npm ci / Prisma → tests → docker compose build (backend + frontend)')
+        logRotator {
+          numToKeep(30)
+        }
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/AdilMoon/DentLux.git')
+                }
+                branch('*/main')
+              }
+            }
+            scriptPath('deployment/jenkins/Jenkinsfile.dentlux')
+          }
+        }
+      }
