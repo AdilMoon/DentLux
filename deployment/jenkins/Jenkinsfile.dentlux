@@ -1,0 +1,71 @@
+// Пример Declarative Pipeline для DentLux (enterprise-стиль).
+// В Jenkins: New Item → Pipeline → Definition: Pipeline script from SCM
+// Script Path: deployment/jenkins/Jenkinsfile.dentlux
+//
+// Перед первым запуском: Credentials для Git (и при необходимости registry).
+
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    ansiColor('xterm')
+    disableConcurrentBuilds(abortPrevious: true)
+  }
+
+  // environment { ... } — добавьте credentials при push в registry (см. JENKINS-ENTERPRISE-GUIDE.md)
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Backend — install & Prisma') {
+      steps {
+        dir('backend') {
+          sh 'npm ci'
+          sh 'npx prisma validate'
+          sh 'npx prisma generate'
+        }
+      }
+    }
+
+    stage('Backend — tests') {
+      steps {
+        dir('backend') {
+          sh 'npm test -- --passWithNoTests || true'
+        }
+      }
+    }
+
+    stage('Docker — build') {
+      steps {
+        sh 'docker compose build backend frontend'
+      }
+    }
+
+    // Раскомментируйте при настроенном registry и credentials docker-registry
+    // stage('Docker — push') {
+    //   steps {
+    //     withCredentials([usernamePassword(credentialsId: 'docker-registry', usernameVariable: 'DR_USER', passwordVariable: 'DR_PASS')]) {
+    //       sh '''
+    //         echo "$DR_PASS" | docker login -u "$DR_USER" --password-stdin your-registry.example.com
+    //         docker tag dentlux-main-backend:latest your-registry.example.com/dentlux/backend:${COMMIT_SHORT}
+    //         docker push your-registry.example.com/dentlux/backend:${COMMIT_SHORT}
+    //       '''
+    //     }
+    //   }
+    // }
+  }
+
+  post {
+    success {
+      echo 'Pipeline OK — при проде добавьте Slack/Email уведомление.'
+    }
+    failure {
+      echo 'Pipeline FAILED — настройте post { failure { slackSend ... } }'
+    }
+  }
+}

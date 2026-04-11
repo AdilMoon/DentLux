@@ -1,0 +1,138 @@
+{
+  "name": "DentLux — ассистент (Gemini через backend)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dentlux/assistant",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-entry",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "dentlux-assistant"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:4000/api/doctors",
+        "options": {}
+      },
+      "id": "http-doctors",
+      "name": "GET /api/doctors",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:4000/api/services",
+        "options": {}
+      },
+      "id": "http-services",
+      "name": "GET /api/services",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const wh = $('Webhook').first().json;\nconst body = wh.body || {};\nconst langRaw = String(body.lang || 'kk').toLowerCase();\nconst lang = langRaw.startsWith('ru') ? 'ru' : 'kk';\nconst userMessage = String(body.message || wh.query?.message || '').trim() || (lang === 'kk' ? 'Сәлеметсіз бе!' : 'Здравствуйте!');\n\nconst doctorsRes = $('GET /api/doctors').first().json;\nconst servicesRes = $('GET /api/services').first().json;\n\nconst doctors = Array.isArray(doctorsRes?.data) ? doctorsRes.data : [];\nconst services = Array.isArray(servicesRes?.data) ? servicesRes.data : [];\n\nconst clinicContext = JSON.stringify({ doctors, services });\n\nconst systemKk = 'Сіз DentLux (DentReserve Pro) премиум стоматологиялық клиниканың виртуалды кеңесшісісіз. Барлық жауапты ӘДЕБИ ҚАЗАҚ ТІЛІНДЕ жазыңыз. Деңгей: әлемдегі топ клиникалар — жылы, сыпайы, нақты; JSON контекстіндегі фактілерден ғана; диагноз жоқ; қатты ауырсынуда 103; HTML <b>/<i>; жазылу ұсыныңыз.';\nconst systemRu = 'Вы консультант DentLux (DentReserve Pro) уровня премиальных клиник. Ответы строго на русском. Только факты из JSON; без диагнозов; при острой боли — скорая; HTML <b>/<i>; предложите запись.';\nconst system = lang === 'kk' ? systemKk : systemRu;\nconst tail = lang === 'kk' ? 'Жауапты тек қазақ тілінде, премиум клиника стилінде беріңіз.' : 'Ответ строго на русском, премиальный стиль.';\nconst prompt = `${system}\\n\\nКонтекст (JSON): ${clinicContext}\\n\\nХабарлама: ${userMessage}\\n\\n${tail}`;\n\nreturn [{\n  json: {\n    userMessage,\n    lang,\n    geminiPayload: {\n      contents: [{ role: 'user', parts: [{ text: prompt }] }],\n      generationConfig: { maxOutputTokens: 1536, temperature: 0.38 }\n    }\n  }\n}];"
+      },
+      "id": "code-build-prompt",
+      "name": "Собрать промпт",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:4000/api/automation/gemini",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Automation-Secret",
+              "value": "12345"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'gemini-2.5-flash', geminiPayload: $json.geminiPayload }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "http-gemini",
+      "name": "Gemini через DentLux backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nlet text = '';\ntry {\n  text = String(r?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();\n} catch (e) {}\nif (!text && r?.error) {\n  text = 'Қызмет уақытша қолжетімсіз. Клиникамен хабарласыңыз. Техн.: ' + (typeof r.error === 'string' ? r.error : JSON.stringify(r.error)).slice(0, 900);\n}\nif (!text) {\n  text = JSON.stringify(r).slice(0, 2000);\n}\nreturn [{ json: { reply: text } }];"
+      },
+      "id": "code-parse-reply",
+      "name": "Разбор ответа",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, response: $json.reply }) }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Ответ клиенту",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1680, 300]
+    },
+    {
+      "parameters": {
+        "content": "## DentLux + Gemini\\nӘдепкі тіл: **қазақша** (`lang` жоқ немесе `kk`). Орысша: `\"lang\":\"ru\"`.\\n`.env`: `GEMINI_API_KEY=...`. HTTP: `X-Automation-Secret: 12345`. `docker compose up -d --build backend`.",
+        "height": 320,
+        "width": 460
+      },
+      "id": "sticky-note",
+      "name": "Инструкция",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [200, 80]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "GET /api/doctors", "type": "main", "index": 0 }]]
+    },
+    "GET /api/doctors": {
+      "main": [[{ "node": "GET /api/services", "type": "main", "index": 0 }]]
+    },
+    "GET /api/services": {
+      "main": [[{ "node": "Собрать промпт", "type": "main", "index": 0 }]]
+    },
+    "Собрать промпт": {
+      "main": [[{ "node": "Gemini через DentLux backend", "type": "main", "index": 0 }]]
+    },
+    "Gemini через DentLux backend": {
+      "main": [[{ "node": "Разбор ответа", "type": "main", "index": 0 }]]
+    },
+    "Разбор ответа": {
+      "main": [[{ "node": "Ответ клиенту", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "meta": { "templateCredsSetupCompleted": false }
+}

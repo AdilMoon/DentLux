@@ -1,0 +1,338 @@
+{
+  "name": "DentLux Enterprise — PostgreSQL + Google Gemini + Telegram + мониторинг",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## DentLux — единая схема\n**Клиенты:** вебхук `dentlux-chat` — әдепкі жауап **қазақша**; орысша: `?lang=ru`. → БД → Gemini → Telegram (қазақша).\n**Мониторинг:** по расписанию проверка `/health`, при сбое — алерт в Telegram.\n\n*В старой схеме IF вёл только в одну ветку БД — контекст для ИИ был неполный. Здесь оба SQL всегда выполняются, визуально это «две ветки» от одного входа.*",
+        "height": 220,
+        "width": 520,
+        "color": 4
+      },
+      "id": "sticky-header",
+      "name": "Заголовок",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [120, 40]
+    },
+    {
+      "parameters": {
+        "content": "### Аналитика (PostgreSQL)\nПараллельное чтение `doctors` и `services`.\nУчётные данные: хост **db**, порт **5432**, БД **dentreserve_pro** (как в Docker Compose).",
+        "height": 420,
+        "width": 260,
+        "color": 5
+      },
+      "id": "sticky-db",
+      "name": "Блок БД",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [600, 240]
+    },
+    {
+      "parameters": {
+        "content": "### Уровень ИИ\nЗапрос идёт на **backend** `POST /api/automation/gemini` — ключ в корневом `.env`: `GEMINI_API_KEY=...`\nМодель: **gemini-2.5-flash** (1.5 в API часто 404). Другие имена: `gemini-2.0-flash`, `gemini-flash-latest` — см. ListModels в sticky.\n**X-Automation-Secret:** **12345**. **Postgres:** хост `db`, порт `5432`, БД `dentreserve_pro`, пользователь `postgres`, пароль **12345**.",
+        "height": 240,
+        "width": 260,
+        "color": 3
+      },
+      "id": "sticky-ai",
+      "name": "Блок ИИ",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1240, 320]
+    },
+    {
+      "parameters": {
+        "content": "### Telegram (қазақша)\nКлиентке және ішкі хабарламалар **қазақ тілінде**. ИИ жауабы әдеби қазақша, топ-клиника стилі. `?lang=ru` — орысша жауап.",
+        "height": 200,
+        "width": 240,
+        "color": 6
+      },
+      "id": "sticky-tg",
+      "name": "Блок Telegram",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1720, 220]
+    },
+    {
+      "parameters": {
+        "content": "### Мониторинг системы\nРаз в **15 мин** запрос `GET /health` к backend.\nПри `unhealthy` или ошибке — **один** алерт в Telegram.\nВключите workflow после настройки credentials.",
+        "height": 200,
+        "width": 400,
+        "color": 2
+      },
+      "id": "sticky-mon",
+      "name": "Блок мониторинга",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [120, 760]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "dentlux-chat",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-customer",
+      "name": "Customer Entry (Webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 400],
+      "webhookId": "dentlux-enterprise-chat"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COALESCE(json_agg(row_to_json(t)), '[]'::json) AS doctors FROM (SELECT * FROM doctors WHERE is_blocked = false LIMIT 300) t;",
+        "options": {}
+      },
+      "id": "pg-doctors",
+      "name": "Fetch Doctors from DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [640, 280],
+      "credentials": {
+        "postgresDb": {
+          "id": "postgres-creds",
+          "name": "DentLux Production DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COALESCE(json_agg(row_to_json(t)), '[]'::json) AS services FROM (SELECT * FROM services WHERE is_active = true LIMIT 300) t;",
+        "options": {}
+      },
+      "id": "pg-services",
+      "name": "Fetch Prices from DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [640, 520],
+      "credentials": {
+        "postgresDb": {
+          "id": "postgres-creds",
+          "name": "DentLux Production DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "merge-db",
+      "name": "Merge DB Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const wh = $('Customer Entry (Webhook)').first().json;\nconst q = wh.query || {};\nconst langRaw = String(q.lang || 'kk').toLowerCase();\nconst lang = langRaw.startsWith('ru') ? 'ru' : 'kk';\nconst userMessage = String(q.message || wh.body?.message || '').trim() || (lang === 'kk' ? 'Сәлеметсіз бе!' : 'Здравствуйте!');\n\nconst row = $input.first().json;\nconst doctors = Array.isArray(row.doctors) ? row.doctors : (row.doctors ? [row.doctors] : []);\nconst services = Array.isArray(row.services) ? row.services : (row.services ? [row.services] : []);\n\nconst clinicContext = JSON.stringify({ doctors, services });\n\nconst systemKk = 'Сіз DentLux (DentReserve Pro) халықаралық деңгейдегі премиум стоматологиялық клиниканың виртуалды кеңесшісісіз.\\n\\nТІЛ: Барлық жауапты ӘДЕБИ ҚАЗАҚ ТІЛІНДЕ жазыңыз (латын әріптерін қоса, клиника стиліне сай).\\n\\nДЕҢГЕЙ: әлемдегі үздік клиникалардағы клиентке арналған хат сапасы — жылы, сыпайы, сенімді, нақты; бос сөзсіз, бірақ тым қысқа емес (қажетті мәлімет толық).\\n\\nҚҰРЫЛЫМ: (1) Қысқа жылы амандасу; (2) Сұраққа тікелей жауап — тек төмендегі JSON контекстіндегі фактілер (дәрігерлер, мамандану, қызмет атаулары, ұзақтығы, баға теңгеде); дерек жоқ болса ойдан шығармаңыз; (3) Келесі қадам: жазылу, тегін кеңес немесе байланыс нөмірі туралы ұтымды ұсыныс; (4) Диагноз қоймаңыз, ем тағайындамаңыз; (5) Қатты ауырсыну, ісіну, қызба, ауыздан қан, тіс/жақ зақымы — дереу дәрігерге немесе 103 жедел жәрдеміне хабарласу керектігін анық айтыңыз; (6) HTML: <b> басты ойлар, <i> сирек екпін; эмодзи қажет емес немесе ең аздап; (7) Соңында қысқа қолдау сөзі.\\n\\nЕгер JSON-да жауап жоқ болса, шынайы айтып, клиникаға хабарласуды ұсыныңыз.';\n\nconst systemRu = 'Вы — виртуальный консультант стоматологии DentLux (DentReserve Pro) уровня премиальных международных клиник.\\n\\nЯЗЫК: все ответы строго на грамотном русском.\\n\\nУРОВЕНЬ: как в топовых клиниках — тепло, уважительно, экспертно, структурировано; не сухо и не избыточно.\\n\\nСТРУКТУРА: (1) Краткое приветствие; (2) Прямой ответ — только факты из JSON (врачи, специализации, услуги, длительность, цены); не выдумывайте; (3) Следующий шаг: запись, консультация, контакт; (4) Без диагнозов и назначений; (5) При острой боли, отёке, лихорадке, кровотечении — срочно к врачу или скорой; (6) HTML: <b> ключевое, <i> редко; (7) Короткая поддерживающая фраза в конце.\\n\\nЕсли данных в JSON нет — честно скажите и предложите связаться с клиникой.';\n\nconst system = lang === 'kk' ? systemKk : systemRu;\nconst tail = lang === 'kk' ? 'Маңызды: жауапты тек қазақ тілінде, премиум клиника стандартында беріңіз.' : 'Важно: ответ строго на русском, в стиле премиальной клиники.';\nconst prompt = `${system}\\n\\n--- Контекст клиники (JSON, только эти данные) ---\\n${clinicContext}\\n\\n--- Хабарлама / сообщение клиента ---\\n${userMessage}\\n\\n${tail}`;\n\nreturn [{\n  json: {\n    userMessage,\n    lang,\n    geminiPayload: {\n      contents: [{ role: 'user', parts: [{ text: prompt }] }],\n      generationConfig: { maxOutputTokens: 1536, temperature: 0.38 }\n    }\n  }\n}];"
+      },
+      "id": "code-formatter",
+      "name": "Data Intelligence Formatter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:4000/api/automation/gemini",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Automation-Secret",
+              "value": "12345"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'gemini-2.5-flash', geminiPayload: $json.geminiPayload }) }}",
+        "options": { "timeout": 120000 }
+      },
+      "id": "http-gemini",
+      "name": "Gemini через DentLux backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nlet reply = '';\ntry {\n  reply = String(r?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();\n} catch (e) {}\nif (!reply && r?.error) reply = '⚠️ Қызмет уақытша қолжетімсіз немесе қате орын алды. Клиникамен хабарласыңыз.\\n\\nТехникалық мәлімет: ' + JSON.stringify(r.error).slice(0, 800);\nif (!reply) reply = JSON.stringify(r).slice(0, 1500);\nreturn [{ json: { reply } }];"
+      },
+      "id": "code-parse-ai",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 400]
+    },
+    {
+      "parameters": {
+        "chatId": "6058337746",
+        "text": "=✅ <b>DentLux — сіздің жауабыңыз</b>\n\n{{ $json.reply }}",
+        "additionalFields": { "parse_mode": "HTML" }
+      },
+      "id": "tg-customer",
+      "name": "Send Answer to Customer",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1780, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-creds",
+          "name": "DentLux Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6058337746",
+        "text": "=📋 <b>DentLux — жаңа сұрау</b>\n\n<b>Клиент хабарламасы:</b> {{ $('Customer Entry (Webhook)').first().json.query.message || $('Customer Entry (Webhook)').first().json.body?.message || '—' }}\n\n<b>ИИ дайындаған жауап (бастапқы):</b>\n{{ $json.reply.substring(0, 800) }}{{ $json.reply.length > 800 ? '…' : '' }}",
+        "additionalFields": { "parse_mode": "HTML" }
+      },
+      "id": "tg-staff",
+      "name": "Staff Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1780, 520],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-creds",
+          "name": "DentLux Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 15 }]
+        }
+      },
+      "id": "schedule-health",
+      "name": "Health Check Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 920]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:4000/health",
+        "options": { "timeout": 15000 }
+      },
+      "id": "http-health",
+      "name": "GET /health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 920],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "health-ok",
+              "leftValue": "={{ $json.success === true && $json.status === 'healthy' }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-health-ok",
+      "name": "Healthy?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [700, 920]
+    },
+    {
+      "parameters": {
+        "chatId": "6058337746",
+        "text": "=🚨 <b>DentLux — backend қатесі</b>\n\n/health тексеруі сәтсіз аяқталды немесе сервер қолжетімсіз.\n\n<pre>{{ JSON.stringify($json, null, 2).slice(0, 3500) }}</pre>",
+        "additionalFields": { "parse_mode": "HTML" }
+      },
+      "id": "tg-alert",
+      "name": "Alert: Backend Down",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [960, 860],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-creds",
+          "name": "DentLux Bot"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "noop-ok",
+      "name": "OK (no alert)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [960, 1000]
+    }
+  ],
+  "connections": {
+    "Customer Entry (Webhook)": {
+      "main": [
+        [
+          { "node": "Fetch Doctors from DB", "type": "main", "index": 0 },
+          { "node": "Fetch Prices from DB", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Fetch Doctors from DB": {
+      "main": [[{ "node": "Merge DB Results", "type": "main", "index": 0 }]]
+    },
+    "Fetch Prices from DB": {
+      "main": [[{ "node": "Merge DB Results", "type": "main", "index": 1 }]]
+    },
+    "Merge DB Results": {
+      "main": [[{ "node": "Data Intelligence Formatter", "type": "main", "index": 0 }]]
+    },
+    "Data Intelligence Formatter": {
+      "main": [[{ "node": "Gemini через DentLux backend", "type": "main", "index": 0 }]]
+    },
+    "Gemini через DentLux backend": {
+      "main": [[{ "node": "Parse AI Response", "type": "main", "index": 0 }]]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          { "node": "Send Answer to Customer", "type": "main", "index": 0 },
+          { "node": "Staff Notification", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Health Check Schedule": {
+      "main": [[{ "node": "GET /health", "type": "main", "index": 0 }]]
+    },
+    "GET /health": {
+      "main": [[{ "node": "Healthy?", "type": "main", "index": 0 }]]
+    },
+    "Healthy?": {
+      "main": [
+        [{ "node": "OK (no alert)", "type": "main", "index": 0 }],
+        [{ "node": "Alert: Backend Down", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateCredsSetupCompleted": false }
+}

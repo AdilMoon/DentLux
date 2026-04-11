@@ -11,6 +11,13 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./deployment/postgres/certs/server.crt:/etc/ssl/certs/server.crt:ro
+      - ./deployment/postgres/certs/server.key:/etc/ssl/private/server.key:ro
+    command: >
+      postgres
+      -c ssl=on
+      -c ssl_cert_file=/etc/ssl/certs/server.crt
+      -c ssl_key_file=/etc/ssl/private/server.key
 
   backend:
     build:
@@ -23,10 +30,16 @@ services:
     environment:
       - PORT=4000
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:12345@db:5432/dentreserve_pro?schema=public
+      - DATABASE_URL=postgresql://postgres:12345@db:5432/dentreserve_pro?schema=public&sslmode=require
       - JWT_SECRET=change_me_to_very_long_random_secret_at_least_32_chars
       - JWT_EXPIRES_IN=7d
       - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:4000,http://localhost
+      # Ключ Gemini для n8n через прокси /api/automation/gemini (задайте в корневом .env)
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      # Список имён: https://generativelanguage.googleapis.com/v1beta/models?key=ВАШ_КЛЮЧ
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      # Тот же текст в заголовке X-Automation-Secret в узле HTTP n8n (по умолчанию 12345)
+      - AUTOMATION_SECRET=${AUTOMATION_SECRET:-12345}
     depends_on:
       - db
     command: >
@@ -80,6 +93,11 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
       - GF_SMTP_ENABLED=true
       - GF_SMTP_HOST=smtp.gmail.com:587
       - GF_SMTP_USER=adilzhanerdenbaev2006@gmail.com
@@ -87,11 +105,25 @@ services:
       - GF_SMTP_FROM_ADDRESS=adilzhanerdenbaev2006@gmail.com
       - GF_SMTP_FROM_NAME=DentLux Monitoring
       - GF_SMTP_SKIP_VERIFY=false
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_SECURITY_ALLOW_EMBEDDING=true
     volumes:
       - grafana_data:/var/lib/grafana
       - ./deployment/monitoring/grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
+
+  renderer:
+    image: grafana/grafana-image-renderer:latest
+    container_name: grafana_renderer
+    ports:
+      - "8081"
+    environment:
+      - ENABLE_METRICS=true
+      - BROWSER_BIN=/usr/bin/google-chrome
+      - IGNORE_HTTPS_ERRORS=true
+    restart: always
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -120,6 +152,17 @@ services:
     ports:
       - "8081:8080"
 
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: blackbox_exporter
+    restart: always
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./deployment/monitoring/blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml
+    command:
+      - '--config.file=/etc/blackbox_exporter/config.yml'
+
   telegram-monitor:
     build:
       context: ./deployment/monitoring
@@ -134,8 +177,180 @@ services:
     depends_on:
       - backend
 
+  # Graphite Monitoring
+  graphite:
+    image: graphiteapp/graphite-statsd:latest
+    container_name: graphite
+    restart: always
+    ports:
+      - "2003:2003" # Carbon line receiver
+      - "2004:2004" # Carbon pickle receiver
+      - "8085:80"   # Graphite Web (mapped to 8085 to avoid conflict)
+      - "8125:8125/udp" # StatsD UDP
+      - "8126:8126" # StatsD TCP
+    volumes:
+      - graphite_storage:/opt/graphite/storage
+      - graphite_conf:/opt/graphite/conf
+
+  # Zabbix Monitoring
+  zabbix-db:
+    image: postgres:15-alpine
+    container_name: zabbix_db
+    restart: always
+    environment:
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix_pwd
+      - POSTGRES_DB=zabbix
+    volumes:
+      - zabbix_db_data:/var/lib/postgresql/data
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:latest
+    container_name: zabbix_server
+    restart: always
+    ports:
+      - "10051:10051"
+    environment:
+      - DB_SERVER_HOST=zabbix-db
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix_pwd
+      - POSTGRES_DB=zabbix
+    depends_on:
+      - zabbix-db
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:latest
+    container_name: zabbix_web
+    restart: always
+    ports:
+      - "8083:8080"
+    environment:
+      - ZBX_SERVER_HOST=zabbix-server
+      - DB_SERVER_HOST=zabbix-db
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix_pwd
+      - POSTGRES_DB=zabbix
+    depends_on:
+      - zabbix-server
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent2:latest
+    container_name: zabbix_agent
+    restart: always
+    ports:
+      - "10050:10050"
+    environment:
+      - ZBX_SERVER_HOST=zabbix-server
+      - ZBX_HOSTNAME=zabbix-agent
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    privileged: true
+
+  # Nagios Monitoring
+  nagios:
+    image: jasonrivers/nagios:latest
+    container_name: nagios
+    restart: always
+    ports:
+      - "8084:80"
+    environment:
+      - NAGIOS_ADMINUSER=nagiosadmin
+      - NAGIOS_ADMINPASSWORD=nagiosadmin
+    volumes:
+      - nagios_etc:/opt/nagios/etc
+      - nagios_var:/opt/nagios/var
+
+  # Опционально: локальные LLM (если вернёте Ollama в workflow n8n)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: dentlux_ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  # n8n Automation & AI Engine
+  n8n-db:
+    image: postgres:15-alpine
+    container_name: n8n_db
+    restart: always
+    environment:
+      POSTGRES_USER: n8n_user
+      POSTGRES_PASSWORD: n8n_password
+      POSTGRES_DB: n8n_data
+    volumes:
+      - n8n_db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n_engine
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=n8n-db
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n_data
+      - DB_POSTGRESDB_USER=n8n_user
+      - DB_POSTGRESDB_PASSWORD=n8n_password
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin_pass
+      - N8N_ENCRYPTION_KEY=your_very_secure_key_here
+      - N8N_AI_NODES_ENABLED=true
+      - N8N_AI_LANGCHAIN_ENABLED=true
+      - N8N_AI_AI_SERVICES_ENABLED=true
+      - N8N_LOG_LEVEL=info
+      - N8N_METRICS=true
+      - N8N_BLOCK_AI_NODES_EXPERIMENTAL_WARNING=true
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-6058337746}
+      - PROJECT_DB_URL=postgresql://postgres:12345@db:5432/dentreserve_pro?schema=public&sslmode=require
+      - GENERIC_TIMEZONE=Europe/Moscow
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - n8n-db
+      - db
+
+  # Jenkins CI/CD Service
+  jenkins:
+    build:
+      context: .
+      dockerfile: ./deployment/jenkins/Dockerfile
+    container_name: jenkins_cicd
+    restart: always
+    privileged: true
+    user: root
+    ports:
+      - "8086:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./deployment/jenkins/casc:/var/jenkins_home/casc_configs:ro
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - CASC_JENKINS_CONFIG=/var/jenkins_home/casc_configs/jenkins.yaml
+    depends_on:
+      - db
+      - backend
+
 volumes:
   postgres_data:
   portainer_data_v2:
   prometheus_data:
   grafana_data:
+  graphite_storage:
+  graphite_conf:
+  zabbix_db_data:
+  nagios_etc:
+  nagios_var:
+  n8n_db_data:
+  n8n_data:
+  ollama_data:
+  jenkins_home:

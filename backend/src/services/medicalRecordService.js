@@ -1,6 +1,7 @@
 const medicalRecordRepository = require('../repositories/medicalRecordRepository');
 const appointmentRepository = require('../repositories/appointmentRepository');
 const AppError = require('../utils/errors');
+const { encrypt, decrypt } = require('../utils/crypto');
 
 class MedicalRecordService {
   // Создать или обновить медицинскую запись
@@ -30,7 +31,31 @@ class MedicalRecordService {
       throw new AppError('Дәрі-дәрмектер тым ұзын (макс 2000 символ)', 400);
     }
 
-    return await medicalRecordRepository.createOrUpdate(appointmentId, data);
+    // Зашифровать чувствительные поля
+    const encryptedData = {
+      ...data,
+      diagnosis: encrypt(data.diagnosis),
+      treatment: encrypt(data.treatment),
+      notes: encrypt(data.notes),
+      prescriptions: encrypt(data.prescriptions)
+    };
+
+    const record = await medicalRecordRepository.createOrUpdate(appointmentId, encryptedData);
+    
+    // Расшифровать для возврата пользователю
+    return this.decryptRecord(record);
+  }
+
+  // Вспомогательный метод для дешифрования
+  decryptRecord(record) {
+    if (!record) return null;
+    return {
+      ...record,
+      diagnosis: decrypt(record.diagnosis),
+      treatment: decrypt(record.treatment),
+      notes: decrypt(record.notes),
+      prescriptions: decrypt(record.prescriptions)
+    };
   }
 
   // Получить историю пациента (для доктора)
@@ -40,7 +65,8 @@ class MedicalRecordService {
       throw new AppError('Рұқсат жоқ', 403);
     }
 
-    return await medicalRecordRepository.getPatientHistory(doctorId, clientId);
+    const history = await medicalRecordRepository.getPatientHistory(doctorId, clientId);
+    return history.map(record => this.decryptRecord(record));
   }
 
   // Получить медицинскую запись по appointmentId
@@ -59,7 +85,7 @@ class MedicalRecordService {
       throw new AppError('Рұқсат жоқ', 403);
     }
 
-    return record;
+    return this.decryptRecord(record);
   }
 
   // Получить все записи доктора
@@ -68,7 +94,8 @@ class MedicalRecordService {
       throw new AppError('Рұқсат жоқ', 403);
     }
 
-    return await medicalRecordRepository.findByDoctorId(doctorId);
+    const records = await medicalRecordRepository.findByDoctorId(doctorId);
+    return records.map(record => this.decryptRecord(record));
   }
 
   // Получить все записи клиента
@@ -77,7 +104,8 @@ class MedicalRecordService {
       throw new AppError('Рұқсат жоқ', 403);
     }
 
-    return await medicalRecordRepository.findByClientId(clientId);
+    const records = await medicalRecordRepository.findByClientId(clientId);
+    return records.map(record => this.decryptRecord(record));
   }
 }
 

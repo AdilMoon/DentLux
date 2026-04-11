@@ -39,3 +39,5 @@ backend/uploads/*
 # Database
 *.sqlite
 *.db
+
+deployment/postgres/certs/

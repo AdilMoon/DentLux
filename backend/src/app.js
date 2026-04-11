@@ -1,9 +1,31 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const StatsD = require('node-statsd');
 require('dotenv').config();
 
 const app = express();
+
+// Graphite/StatsD Client
+const statsd = new StatsD({
+  host: process.env.STATSD_HOST || 'graphite',
+  port: parseInt(process.env.STATSD_PORT) || 8125,
+  prefix: 'dentlux.',
+});
+
+// Middleware для мониторинга запросов
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const path = req.path.replace(/\//g, '_').replace(/^_/, '') || 'root';
+    statsd.increment(`requests.count`);
+    statsd.increment(`requests.path.${path}.count`);
+    statsd.timing(`requests.path.${path}.duration`, duration);
+    statsd.increment(`requests.status.${res.statusCode}.count`);
+  });
+  next();
+});
 
 // Security middleware - helmet для защиты заголовков
 app.use(helmet({
@@ -36,7 +58,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Automation-Secret'],
   maxAge: 86400, // 24 часа
 }));
 
@@ -155,6 +177,9 @@ app.use('/api/payments/gateway', paymentGatewayRoutes);
 
 const aiRoutes = require('./routes/aiRoutes');
 app.use('/api/ai', aiRoutes);
+
+const automationRoutes = require('./routes/automationRoutes');
+app.use('/api/automation', automationRoutes);
 
 // Обработка 404
 app.use((req, res) => {
