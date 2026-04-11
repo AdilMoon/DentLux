@@ -10,6 +10,7 @@ pipeline {
   environment {
     // Стабильные имена образов при сборке из workspace Jenkins (не от имени папки job’а).
     COMPOSE_PROJECT_NAME = 'dentlux'
+    DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/dentreserve_pro?schema=public'
   }
 
   options {
