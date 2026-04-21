@@ -1,7 +1,7 @@
 FROM jenkins/jenkins:lts
 USER root
 
-# Install Docker CLI to interact with the Docker daemon
+# build-essential + python3: сборка bcrypt (npm ci), если не скачался prebuild с GitHub
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
@@ -9,7 +9,11 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     git \
     unzip \
-    jq
+    jq \
+    build-essential \
+    python3 \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \

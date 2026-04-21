@@ -1,16 +1,13 @@
-// Пример Declarative Pipeline для DentLux (enterprise-стиль).
-// В Jenkins: New Item → Pipeline → Definition: Pipeline script from SCM
-// Script Path: deployment/jenkins/Jenkinsfile.dentlux
-//
-// Перед первым запуском: Credentials для Git (и при необходимости registry).
+// Pipeline: SCM → backend (npm ci + Prisma + tests) → docker compose build
+// Jenkins в Docker (compose user: root): перед npm ci ставим make/g++ если образ ещё старый.
 
 pipeline {
   agent any
 
   environment {
-    // Стабильные имена образов при сборке из workspace Jenkins (не от имени папки job’а).
     COMPOSE_PROJECT_NAME = 'dentlux'
-    DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/dentreserve_pro?schema=public'
+    // Сервис db в той же docker-сети, что и jenkins_cicd (см. docker-compose)
+    DATABASE_URL = 'postgresql://postgres:12345@db:5432/dentreserve_pro?schema=public&sslmode=no-verify'
   }
 
   options {
@@ -18,8 +15,6 @@ pipeline {
     ansiColor('xterm')
     disableConcurrentBuilds(abortPrevious: true)
   }
-
-  // environment { ... } — добавьте credentials при push в registry (см. JENKINS-ENTERPRISE-GUIDE.md)
 
   stages {
     stage('Checkout') {
@@ -30,6 +25,14 @@ pipeline {
 
     stage('Backend — install & Prisma') {
       steps {
+        sh '''
+          export DEBIAN_FRONTEND=noninteractive
+          if command -v apt-get >/dev/null 2>&1; then
+            apt-get update -qq
+            apt-get install -y -qq build-essential python3 python3-dev || true
+          fi
+          command -v make && make --version | head -1
+        '''
         dir('backend') {
           sh 'npm ci'
           sh 'npx prisma validate'
@@ -51,45 +54,38 @@ pipeline {
         sh 'docker compose build backend frontend'
       }
     }
-
-    // Раскомментируйте при настроенном registry и credentials docker-registry
-    // stage('Docker — push') {
-    //   steps {
-    //     withCredentials([usernamePassword(credentialsId: 'docker-registry', usernameVariable: 'DR_USER', passwordVariable: 'DR_PASS')]) {
-    //       sh '''
-    //         echo "$DR_PASS" | docker login -u "$DR_USER" --password-stdin your-registry.example.com
-    //         docker tag dentlux-main-backend:latest your-registry.example.com/dentlux/backend:${COMMIT_SHORT}
-    //         docker push your-registry.example.com/dentlux/backend:${COMMIT_SHORT}
-    //       '''
-    //     }
-    //   }
-    // }
   }
 
   post {
     success {
-      sh '''
-        set +x
-        if [ -z "${TELEGRAM_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
-          echo "Telegram: TELEGRAM_TOKEN/TELEGRAM_CHAT_ID не заданы — пропуск уведомления"
-          exit 0
-        fi
-        export TEXT="✅ Jenkins SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}
-${BUILD_URL}"
-        bash "${WORKSPACE}/deployment/jenkins/notify-telegram.sh" || echo "Telegram: отправка не удалась (см. лог)"
-      '''
+      sh '''#!/bin/bash
+set +e
+TOKEN="${TELEGRAM_TOKEN:-}"
+CHAT="${TELEGRAM_CHAT_ID:-}"
+if [[ -z "$TOKEN" || -z "$CHAT" ]]; then
+  echo "Telegram: пропуск (нет TELEGRAM_TOKEN или TELEGRAM_CHAT_ID)"
+  exit 0
+fi
+TEXT="$(printf '%s\n%s' "✅ Jenkins SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}" "${BUILD_URL}")"
+curl -sS -m 30 -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+  -d "chat_id=${CHAT}" \
+  --data-urlencode "text=${TEXT}" | grep -q '"ok":true' && echo "Telegram: OK (success)" || echo "Telegram: send failed"
+'''
     }
     failure {
-      sh '''
-        set +x
-        if [ -z "${TELEGRAM_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
-          echo "Telegram: TELEGRAM_TOKEN/TELEGRAM_CHAT_ID не заданы — пропуск уведомления"
-          exit 0
-        fi
-        export TEXT="❌ Jenkins FAILED: ${JOB_NAME} #${BUILD_NUMBER}
-${BUILD_URL}"
-        bash "${WORKSPACE}/deployment/jenkins/notify-telegram.sh" || echo "Telegram: отправка не удалась (см. лог)"
-      '''
+      sh '''#!/bin/bash
+set +e
+TOKEN="${TELEGRAM_TOKEN:-}"
+CHAT="${TELEGRAM_CHAT_ID:-}"
+if [[ -z "$TOKEN" || -z "$CHAT" ]]; then
+  echo "Telegram: пропуск (нет TELEGRAM_TOKEN или TELEGRAM_CHAT_ID)"
+  exit 0
+fi
+TEXT="$(printf '%s\n%s' "❌ Jenkins FAILED: ${JOB_NAME} #${BUILD_NUMBER}" "${BUILD_URL}")"
+curl -sS -m 30 -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+  -d "chat_id=${CHAT}" \
+  --data-urlencode "text=${TEXT}" | grep -q '"ok":true' && echo "Telegram: OK (failure notice)" || echo "Telegram: send failed"
+'''
     }
   }
 }
