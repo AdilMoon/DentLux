@@ -8,6 +8,12 @@ pipeline {
     COMPOSE_PROJECT_NAME = 'dentlux'
     // Сервис db в той же docker-сети, что и jenkins_cicd (см. docker-compose)
     DATABASE_URL = 'postgresql://postgres:12345@db:5432/dentreserve_pro?schema=public&sslmode=no-verify'
+    // Без JWT_SECRET падают тесты: jsonwebtoken «secretOrPrivateKey must have a value»
+    JWT_SECRET = 'jenkins_ci_jwt_secret_must_be_at_least_32_characters_long'
+    JWT_EXPIRES_IN = '7d'
+    NODE_ENV = 'test'
+    ALLOWED_ORIGINS = 'http://localhost,http://127.0.0.1'
+    STATSD_MOCK = 'true'
   }
 
   options {
