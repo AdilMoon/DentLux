@@ -1,6 +1,7 @@
 const doctorService = require('../services/doctorService');
 const fs = require('fs');
 const path = require('path');
+const { secureUnlinkSync } = require('../utils/secureFs');
 const userRepository = require('../repositories/userRepository');
 const AppError = require('../utils/errors');
 
@@ -84,7 +85,7 @@ class DoctorController {
       if (!user) {
         // Удаляем загруженный файл
         if (req.file.path && fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+          secureUnlinkSync(req.file.path);
         }
         return res.status(404).json({
           success: false,
@@ -96,7 +97,7 @@ class DoctorController {
       if (user.avatarUrl) {
         const oldFilePath = path.join(__dirname, '../../', user.avatarUrl);
         if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
+          secureUnlinkSync(oldFilePath);
         }
       }
 
@@ -116,7 +117,7 @@ class DoctorController {
       // Удаляем загруженный файл в случае ошибки
       if (req.file && req.file.path) {
         if (fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+          secureUnlinkSync(req.file.path);
         }
       }
       if (error.isOperational) {

@@ -41,7 +41,7 @@ pipeline {
     stage('Backend — tests') {
       steps {
         dir('backend') {
-          sh 'npm test -- --passWithNoTests || true'
+          sh 'npm test -- --passWithNoTests'
         }
       }
     }
@@ -68,10 +68,28 @@ pipeline {
 
   post {
     success {
-      echo 'Pipeline OK — при проде добавьте Slack/Email уведомление.'
+      sh '''
+        set +x
+        if [ -z "${TELEGRAM_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+          echo "Telegram: TELEGRAM_TOKEN/TELEGRAM_CHAT_ID не заданы — пропуск уведомления"
+          exit 0
+        fi
+        export TEXT="✅ Jenkins SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}
+${BUILD_URL}"
+        bash "${WORKSPACE}/deployment/jenkins/notify-telegram.sh" || echo "Telegram: отправка не удалась (см. лог)"
+      '''
     }
     failure {
-      echo 'Pipeline FAILED — настройте post { failure { slackSend ... } }'
+      sh '''
+        set +x
+        if [ -z "${TELEGRAM_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+          echo "Telegram: TELEGRAM_TOKEN/TELEGRAM_CHAT_ID не заданы — пропуск уведомления"
+          exit 0
+        fi
+        export TEXT="❌ Jenkins FAILED: ${JOB_NAME} #${BUILD_NUMBER}
+${BUILD_URL}"
+        bash "${WORKSPACE}/deployment/jenkins/notify-telegram.sh" || echo "Telegram: отправка не удалась (см. лог)"
+      '''
     }
   }
 }

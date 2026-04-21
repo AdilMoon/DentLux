@@ -1,8 +1,11 @@
 # Используем базовый образ Node.js (Debian-based для Prisma)
 FROM node:18-bullseye-slim
 
-# Устанавливаем необходимые системные зависимости для Prisma
-RUN apt-get update && apt-get install -y openssl libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
+# Prisma + сборка bcrypt из исходников (если не скачался prebuilt с GitHub)
+RUN apt-get update && apt-get install -y \
+    openssl libssl-dev ca-certificates \
+    python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Устанавливаем рабочую директорию
 WORKDIR /app

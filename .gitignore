@@ -41,3 +41,10 @@ backend/uploads/*
 *.db
 
 deployment/postgres/certs/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf

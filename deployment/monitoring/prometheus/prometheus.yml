@@ -19,6 +19,18 @@ scrape_configs:
     static_configs:
       - targets: ['dentlux_backend:4000']
 
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  - job_name: 'n8n-postgres-exporter'
+    static_configs:
+      - targets: ['n8n-postgres-exporter:9187']
+
+  - job_name: 'zabbix-postgres-exporter'
+    static_configs:
+      - targets: ['zabbix-postgres-exporter:9187']
+
   - job_name: 'blackbox'
     metrics_path: /probe
     params:
@@ -26,6 +38,7 @@ scrape_configs:
     static_configs:
       - targets:
         - http://dentlux_backend:4000/health
+        - http://reverse-proxy:80/health
         - http://dentlux_frontend:80
         - http://grafana:3000/api/health
         - http://n8n_engine:5678/healthz

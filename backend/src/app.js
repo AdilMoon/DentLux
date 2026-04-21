@@ -2,15 +2,21 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const StatsD = require('node-statsd');
+const client = require('prom-client');
 require('dotenv').config();
 
 const app = express();
 
-// Graphite/StatsD Client
+// Prometheus: стандартные метрики процесса (CPU, память, event loop и т.д.)
+const metricsRegister = new client.Registry();
+client.collectDefaultMetrics({ register: metricsRegister, prefix: 'dentlux_' });
+
+// Graphite/StatsD Client (в тестах без Docker хоста `graphite` нет — не шлём UDP)
 const statsd = new StatsD({
   host: process.env.STATSD_HOST || 'graphite',
-  port: parseInt(process.env.STATSD_PORT) || 8125,
+  port: parseInt(process.env.STATSD_PORT, 10) || 8125,
   prefix: 'dentlux.',
+  mock: process.env.NODE_ENV === 'test' || process.env.STATSD_MOCK === 'true',
 });
 
 // Middleware для мониторинга запросов
@@ -82,6 +88,16 @@ app.get('/', (req, res) => {
     message: 'DentReserve Pro API',
     version: '1.0.0',
   });
+});
+
+// Метрики для Prometheus (job `backend` в prometheus.yml)
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', metricsRegister.contentType);
+    res.end(await metricsRegister.metrics());
+  } catch (err) {
+    res.status(500).end(err.message);
+  }
 });
 
 // Health check маршрут

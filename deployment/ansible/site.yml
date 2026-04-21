@@ -1,0 +1,33 @@
+---
+# Ansible playbook для РК: поднять стек через Docker Compose на целевой машине.
+# Запуск из каталога deployment/ansible:
+#   ansible-playbook -i inventory.ini site.yml
+#
+# Только localhost по умолчанию; для удалённого сервера добавьте хост в inventory.ini
+# и настройте SSH (ansible_user, ansible_ssh_private_key_file).
+
+- name: DentLux — Docker Compose
+  hosts: dentlux
+  gather_facts: false
+
+  vars:
+    project_root: "{{ playbook_dir }}/../.."
+
+  tasks:
+    - name: Проверить наличие docker compose
+      command: docker compose version
+      changed_when: false
+      register: compose_ver
+
+    - name: Показать версию compose
+      debug:
+        msg: "{{ compose_ver.stdout }}"
+
+    # Если только что добавили пользователя в группу docker — активируем её в этой задаче (sg docker)
+    - name: Собрать и запустить контейнеры
+      shell: sg docker -c "docker compose up -d --build"
+      args:
+        chdir: "{{ project_root }}"
+        executable: /bin/bash
+      register: compose_up
+      changed_when: "'Creating' in compose_up.stderr or 'Creating' in compose_up.stdout or 'Recreating' in compose_up.stderr or 'Recreating' in compose_up.stdout or 'Starting' in compose_up.stderr"

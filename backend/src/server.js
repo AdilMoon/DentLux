@@ -20,6 +20,7 @@ const server = app.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
   console.log(`📡 API доступен по адресу: http://localhost:${PORT}`);
   console.log(`🔍 Health check: http://localhost:${PORT}/health`);
+  console.log(`📈 Prometheus metrics: http://localhost:${PORT}/metrics`);
   console.log(`📊 База данных: ${getDatabaseInfo()}`);
 });
 

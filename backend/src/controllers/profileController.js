@@ -2,6 +2,7 @@ const profileService = require('../services/profileService');
 const AppError = require('../utils/errors');
 const fs = require('fs');
 const path = require('path');
+const { secureUnlinkSync } = require('../utils/secureFs');
 
 class ProfileController {
   // Получить текущий профиль
@@ -57,7 +58,7 @@ class ProfileController {
       if (oldProfile.avatarUrl) {
         const oldFilePath = path.join(__dirname, '../../', oldProfile.avatarUrl);
         if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
+          secureUnlinkSync(oldFilePath);
         }
       }
 
@@ -73,7 +74,7 @@ class ProfileController {
       // Удаляем загруженный файл в случае ошибки
       if (req.file && req.file.path) {
         if (fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+          secureUnlinkSync(req.file.path);
         }
       }
       if (error.isOperational) {
