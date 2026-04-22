@@ -1,0 +1,14 @@
+---
+app_name: dentlux
+app_repo_url: "https://github.com/AdilMoon/DentLux.git"
+app_repo_branch: "main"
+app_root: "/opt/dentlux"
+app_owner: "dentops"
+
+docker_compose_file: "{{ app_root }}/docker-compose.yml"
+backend_health_url: "http://localhost:4000/health"
+reverse_proxy_health_url: "http://localhost:8090/health"
+
+security_ssh_port: 22
+security_allow_http: true
+security_allow_https: true

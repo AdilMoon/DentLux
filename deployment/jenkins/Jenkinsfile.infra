@@ -1,0 +1,147 @@
+pipeline {
+  agent any
+
+  parameters {
+    choice(
+      name: 'TF_ACTION',
+      choices: ['plan', 'apply', 'destroy'],
+      description: 'Terraform action for GCP infrastructure'
+    )
+    booleanParam(
+      name: 'RUN_ANSIBLE_DEPLOY',
+      defaultValue: true,
+      description: 'Run Ansible deployment after successful Terraform apply'
+    )
+    string(
+      name: 'TF_VARS_FILE',
+      defaultValue: 'terraform.tfvars',
+      description: 'Terraform variables file path relative to deployment/terraform/gcp'
+    )
+  }
+
+  options {
+    timestamps()
+    ansiColor('xterm')
+    disableConcurrentBuilds(abortPrevious: true)
+  }
+
+  environment {
+    TF_IN_AUTOMATION = 'true'
+    TF_INPUT = 'false'
+    TF_CLI_ARGS = '-no-color'
+    TERRAFORM_DIR = 'deployment/terraform/gcp'
+    ANSIBLE_DIR = 'deployment/ansible'
+    ANSIBLE_HOST_KEY_CHECKING = 'False'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Tooling Versions') {
+      steps {
+        sh '''
+          terraform version
+          ansible --version
+        '''
+      }
+    }
+
+    stage('Terraform Init/Validate') {
+      steps {
+        withCredentials([file(credentialsId: 'gcp-sa-json', variable: 'GCP_SA_FILE')]) {
+          sh '''
+            set -euo pipefail
+            export GOOGLE_APPLICATION_CREDENTIALS="$GCP_SA_FILE"
+            cd "$TERRAFORM_DIR"
+            terraform init -backend=false
+            terraform fmt -check -recursive
+            terraform validate
+          '''
+        }
+      }
+    }
+
+    stage('Terraform Plan') {
+      steps {
+        withCredentials([file(credentialsId: 'gcp-sa-json', variable: 'GCP_SA_FILE')]) {
+          sh '''
+            set -euo pipefail
+            export GOOGLE_APPLICATION_CREDENTIALS="$GCP_SA_FILE"
+            cd "$TERRAFORM_DIR"
+            terraform plan -var-file="$TF_VARS_FILE" -out=tfplan
+          '''
+        }
+      }
+    }
+
+    stage('Terraform Apply/Destroy') {
+      when {
+        expression { params.TF_ACTION == 'apply' || params.TF_ACTION == 'destroy' }
+      }
+      steps {
+        withCredentials([file(credentialsId: 'gcp-sa-json', variable: 'GCP_SA_FILE')]) {
+          sh '''
+            set -euo pipefail
+            export GOOGLE_APPLICATION_CREDENTIALS="$GCP_SA_FILE"
+            cd "$TERRAFORM_DIR"
+            if [ "$TF_ACTION" = "apply" ]; then
+              terraform apply -auto-approve tfplan
+            else
+              terraform destroy -auto-approve -var-file="$TF_VARS_FILE"
+            fi
+          '''
+        }
+      }
+    }
+
+    stage('Ansible Deploy') {
+      when {
+        expression { params.TF_ACTION == 'apply' && params.RUN_ANSIBLE_DEPLOY }
+      }
+      steps {
+        withCredentials([sshUserPrivateKey(credentialsId: 'dentlux-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+          sh '''
+            set -euo pipefail
+            cd "$ANSIBLE_DIR"
+            test -f inventory.gcp.ini
+            ansible-galaxy collection install -r requirements.yml
+            ansible-playbook -i inventory.gcp.ini site-enterprise.yml \
+              --private-key "$SSH_KEY" \
+              -e "ansible_ssh_private_key_file=$SSH_KEY"
+          '''
+        }
+      }
+    }
+
+    stage('Smoke Checks') {
+      when {
+        expression { params.TF_ACTION == 'apply' }
+      }
+      steps {
+        sh '''
+          set -euo pipefail
+          PUBLIC_IP="$(cd "$TERRAFORM_DIR" && terraform output -raw public_ip)"
+          curl -fsS --max-time 20 "http://${PUBLIC_IP}:4000/health"
+          curl -fsS --max-time 20 "http://${PUBLIC_IP}:8090/health"
+        '''
+      }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'deployment/terraform/gcp/tfplan', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'deployment/ansible/inventory.gcp.ini', allowEmptyArchive: true
+    }
+    success {
+      echo 'Infra pipeline completed successfully.'
+    }
+    failure {
+      echo 'Infra pipeline failed. Review Terraform/Ansible logs.'
+    }
+  }
+}

@@ -1,0 +1,51 @@
+---
+- name: Ensure application directory exists
+  ansible.builtin.file:
+    path: "{{ app_root }}"
+    state: directory
+    owner: "{{ app_owner }}"
+    group: "{{ app_owner }}"
+    mode: "0755"
+
+- name: Checkout DentLux repository
+  ansible.builtin.git:
+    repo: "{{ app_repo_url }}"
+    dest: "{{ app_root }}"
+    version: "{{ app_repo_branch }}"
+    update: true
+    force: true
+  become_user: "{{ app_owner }}"
+
+- name: Build and start stack via Docker Compose
+  ansible.builtin.command:
+    cmd: docker compose up -d --build
+    chdir: "{{ app_root }}"
+  register: compose_up
+  changed_when: "'Started' in compose_up.stdout or 'Recreated' in compose_up.stdout or 'Created' in compose_up.stdout"
+
+- name: Wait for backend health endpoint
+  ansible.builtin.uri:
+    url: "{{ backend_health_url }}"
+    method: GET
+    status_code: 200
+  register: backend_health
+  retries: 20
+  delay: 5
+  until: backend_health.status == 200
+
+- name: Wait for reverse proxy health endpoint
+  ansible.builtin.uri:
+    url: "{{ reverse_proxy_health_url }}"
+    method: GET
+    status_code: 200
+  register: proxy_health
+  retries: 20
+  delay: 5
+  until: proxy_health.status == 200
+
+- name: Show release and health summary
+  ansible.builtin.debug:
+    msg:
+      - "Commit deployed: {{ lookup('ansible.builtin.pipe', 'cd ' ~ app_root ~ ' && git rev-parse --short HEAD') }}"
+      - "Backend health: {{ backend_health.status }}"
+      - "Reverse proxy health: {{ proxy_health.status }}"

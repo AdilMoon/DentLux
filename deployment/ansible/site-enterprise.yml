@@ -1,0 +1,20 @@
+---
+- name: DentLux Enterprise Bootstrap and Deploy
+  hosts: dentlux
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Assert required variables are defined
+      ansible.builtin.assert:
+        that:
+          - app_repo_url is defined
+          - app_root is defined
+          - app_owner is defined
+        fail_msg: "Set required variables in group_vars/all.yml before running."
+
+  roles:
+    - role: common
+    - role: docker
+    - role: security
+    - role: deploy

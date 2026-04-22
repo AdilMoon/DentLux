@@ -7,7 +7,7 @@
 1. Закоммитьте и запушьте изменения (в т.ч. `deployment/jenkins/`).
 2. Пересоберите и перезапустите Jenkins, чтобы подтянулись плагины и JCasC:
    `docker compose build jenkins && docker compose up -d jenkins`
-3. Откройте `http://localhost:8086` — job **`dentlux-ci`** должен появиться сам (из `casc/jenkins.yaml`). Запустите **Build Now**.
+3. Откройте `http://localhost:8086` — jobs **`dentlux-ci`** и **`dentlux-infra-cd`** должны появиться сами (из `casc/jenkins.yaml`). Запустите **Build Now**.
 4. Если репозиторий **приватный**: в Jenkins создайте credential с ID **`dentlux-github`** (PAT GitHub) и в `jenkins.yaml` в блоке `remote { }` добавьте строку `credentials('dentlux-github')`, затем снова перезапустите Jenkins.
 5. Уже был вручную создан job с тем же именем — конфигурация применится из JCasC при старте (проверьте ветку **main** и Script Path).
 
@@ -48,6 +48,13 @@
    - `slack-webhook` или токен Slack;
    - при деплое по SSH — `ssh-deploy-key` с приватным ключом.
 3. Job **`dentlux-ci`** создаётся из **`casc/jenkins.yaml`** (GitHub `AdilMoon/DentLux`, ветка `main`). Ручной **New Item** не нужен, если JCasC отработал без ошибок.
+4. Для job **`dentlux-infra-cd`** добавьте credentials:
+   - `gcp-sa-json` (тип **Secret file**) — JSON ключ service account для Terraform/GCP.
+   - `dentlux-ssh-key` (тип **SSH Username with private key**) — ключ пользователя VM для Ansible.
+5. В параметрах **`dentlux-infra-cd`**:
+   - `TF_ACTION=plan` — только план;
+   - `TF_ACTION=apply` + `RUN_ANSIBLE_DEPLOY=true` — поднять infra и задеплоить приложение;
+   - `TF_ACTION=destroy` — удалить infra.
 4. **Build Triggers**: webhook из GitHub/GitLab на push; локально — **Poll SCM** или **Build Now**.
 5. **Blue Ocean** — визуально смотреть стадии и время; полезно для демонстраций.
 
@@ -55,8 +62,23 @@
 
 ## 4. Интеграция с вашим репозиторием
 
-- Файл **`deployment/jenkins/Jenkinsfile.dentlux`** — пайплайн DentLux (checkout, backend, docker build). URL репозитория для job’а задаётся в **`jenkins.yaml`**.
-- **`deployment/jenkins/casc/jenkins.yaml`** — через **Job DSL** создаётся pipeline **`dentlux-ci`** из GitHub; при смене URL/ветки отредактируйте YAML и перезапустите контейнер Jenkins.
+- Файл **`deployment/jenkins/Jenkinsfile.dentlux`** — app CI пайплайн (checkout, backend, docker build).
+- Файл **`deployment/jenkins/Jenkinsfile.infra`** — infra CD пайплайн (Terraform GCP + Ansible + smoke checks).
+- **`deployment/jenkins/casc/jenkins.yaml`** — через **Job DSL** создаются pipelines **`dentlux-ci`** и **`dentlux-infra-cd`** из GitHub; при смене URL/ветки отредактируйте YAML и перезапустите контейнер Jenkins.
+
+---
+
+## 7. Terraform + Ansible orchestration (wow-режим)
+
+`dentlux-infra-cd` выполняет полный поток как в enterprise-командах:
+1. Checkout кода.
+2. `terraform init`, `fmt -check`, `validate`.
+3. `terraform plan` (артефакт `tfplan` сохраняется в Jenkins).
+4. При `TF_ACTION=apply`: `terraform apply`.
+5. После apply: Ansible deploy через `site-enterprise.yml` с inventory, который создаёт Terraform.
+6. Smoke checks (`/health` backend и reverse-proxy по public IP из Terraform output).
+
+Это показывает связку **IaC + Config Management + CI/CD** в одном reproducible pipeline.
 
 ---
 

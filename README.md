@@ -101,6 +101,41 @@ Health: `http://localhost:4000/health`
      (crontab -l 2>/dev/null; echo "0 3 * * * /home/$USER/Downloads/DentLux-main/deployment/backup.sh") | crontab -
      ```
 
+## Enterprise: GCP + Terraform + Ansible
+
+Для демонстрации production-подхода добавлен полный IaC pipeline:
+
+1. **Terraform для Google Cloud** (`deployment/terraform/gcp/`)
+   - Поднимает VPC, subnet, firewall, VM с static IP и startup bootstrap.
+   - Генерирует inventory для Ansible автоматически.
+
+2. **Ansible role-based deployment** (`deployment/ansible/site-enterprise.yml`)
+   - `common`, `docker`, `security`, `deploy` роли.
+   - Деплой из Git + health checks backend/reverse-proxy.
+
+### Быстрый сценарий запуска
+
+```bash
+# 1) Infra
+cd deployment/terraform/gcp
+cp terraform.tfvars.example terraform.tfvars
+terraform init
+terraform apply -var-file=terraform.tfvars
+
+# 2) App deploy
+cd ../../ansible
+ansible-galaxy collection install -r requirements.yml
+ansible-playbook -i inventory.gcp.ini site-enterprise.yml
+```
+
+### Jenkins orchestration (Terraform + Ansible)
+
+В Jenkins добавлен job `dentlux-infra-cd` (`deployment/jenkins/Jenkinsfile.infra`), который:
+- выполняет `terraform init/validate/plan`;
+- по выбору делает `apply` или `destroy`;
+- после `apply` запускает Ansible `site-enterprise.yml`;
+- делает smoke-check `/health` по public IP из Terraform output.
+
 ### Остановка проекта
 ```bash
 docker-compose down

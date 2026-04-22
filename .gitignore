@@ -48,3 +48,8 @@ deployment/postgres/certs/
 *.tfstate.*
 crash.log
 override.tf
+*.tfvars
+backend.hcl
+
+# Generated deployment artifacts
+deployment/ansible/inventory.gcp.ini

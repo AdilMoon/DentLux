@@ -1,0 +1,25 @@
+---
+- name: Install baseline OS packages
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - git
+      - gnupg
+      - software-properties-common
+      - jq
+      - fail2ban
+      - ufw
+      - unattended-upgrades
+    state: present
+
+- name: Ensure unattended upgrades are enabled
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    mode: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";

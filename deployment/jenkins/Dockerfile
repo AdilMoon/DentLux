@@ -8,11 +8,13 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     lsb-release \
     git \
+    openssh-client \
     unzip \
     jq \
     build-essential \
     python3 \
     python3-dev \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/apt/keyrings && \
@@ -20,9 +22,18 @@ RUN mkdir -p /etc/apt/keyrings && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && apt-get install -y docker-ce-cli docker-compose-plugin
 
+# Install Terraform CLI for infra pipelines
+RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /etc/apt/keyrings/hashicorp.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list > /dev/null && \
+    apt-get update && apt-get install -y terraform && \
+    rm -rf /var/lib/apt/lists/*
+
 # Install Node.js (needed for backend/frontend tasks)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs
+
+# Install Ansible for post-Terraform deployment
+RUN apt-get update && apt-get install -y ansible && rm -rf /var/lib/apt/lists/*
 
 # Pre-install Jenkins Plugins
 RUN jenkins-plugin-cli --plugins \
