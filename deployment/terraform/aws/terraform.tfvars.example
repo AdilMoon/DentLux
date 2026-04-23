@@ -7,5 +7,5 @@ public_subnet_cidr   = "10.20.1.0/24"
 instance_type        = "t3.medium"
 disk_size_gb         = 50
 ssh_user             = "ubuntu"
-ssh_public_key       = "cwNNK8WQhkINnpnsc8Jh1+A1cMqaLe+h4/M6smDcj18 dentlux-aws"
+ssh_public_key       = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGh4cGxhY2Vob2xkZXJLZXlGb3JFeGFtcGxlIGRlbmRsdXgtYXdz"
 allowed_ssh_cidrs    = ["2.135.159.45/32"]
