@@ -49,8 +49,8 @@
    - при деплое по SSH — `ssh-deploy-key` с приватным ключом.
 3. Job **`dentlux-ci`** создаётся из **`casc/jenkins.yaml`** (GitHub `AdilMoon/DentLux`, ветка `main`). Ручной **New Item** не нужен, если JCasC отработал без ошибок.
 4. Для job **`dentlux-infra-cd`** добавьте credentials:
-   - `gcp-sa-json` (тип **Secret file**) — JSON ключ service account для Terraform/GCP.
-   - `dentlux-ssh-key` (тип **SSH Username with private key**) — ключ пользователя VM для Ansible.
+   - `aws-terraform` (тип **Username with password**) — **Username** = AWS Access Key ID, **Password** = AWS Secret Access Key (IAM пользователь с правами на EC2/VPC/EIP и т.д.).
+   - `dentlux-ssh-key` (тип **SSH Username with private key**) — приватный ключ; **Username** = тот же `ssh_user`, что в `terraform.tfvars` (для Ubuntu AMI обычно `ubuntu`).
 5. В параметрах **`dentlux-infra-cd`**:
    - `TF_ACTION=plan` — только план;
    - `TF_ACTION=apply` + `RUN_ANSIBLE_DEPLOY=true` — поднять infra и задеплоить приложение;
@@ -63,7 +63,7 @@
 ## 4. Интеграция с вашим репозиторием
 
 - Файл **`deployment/jenkins/Jenkinsfile.dentlux`** — app CI пайплайн (checkout, backend, docker build).
-- Файл **`deployment/jenkins/Jenkinsfile.infra`** — infra CD пайплайн (Terraform GCP + Ansible + smoke checks).
+- Файл **`deployment/jenkins/Jenkinsfile.infra`** — infra CD пайплайн (Terraform AWS + Ansible + smoke checks).
 - **`deployment/jenkins/casc/jenkins.yaml`** — через **Job DSL** создаются pipelines **`dentlux-ci`** и **`dentlux-infra-cd`** из GitHub; при смене URL/ветки отредактируйте YAML и перезапустите контейнер Jenkins.
 
 ---
@@ -75,7 +75,7 @@
 2. `terraform init`, `fmt -check`, `validate`.
 3. `terraform plan` (артефакт `tfplan` сохраняется в Jenkins).
 4. При `TF_ACTION=apply`: `terraform apply`.
-5. После apply: Ansible deploy через `site-enterprise.yml` с inventory, который создаёт Terraform.
+5. После apply: Ansible deploy через `site-enterprise.yml` с `inventory.aws.ini`, который создаёт Terraform.
 6. Smoke checks (`/health` backend и reverse-proxy по public IP из Terraform output).
 
 Это показывает связку **IaC + Config Management + CI/CD** в одном reproducible pipeline.

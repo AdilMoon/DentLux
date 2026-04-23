@@ -13,26 +13,29 @@
 ```bash
 cd deployment/ansible
 ansible-galaxy collection install -r requirements.yml
-cp inventory.gcp.example.ini inventory.gcp.ini
-ansible -i inventory.gcp.ini dentlux -m ping
-ansible-playbook -i inventory.gcp.ini site-enterprise.yml
+cp inventory.aws.example.ini inventory.aws.ini
+ansible -i inventory.aws.ini dentlux -m ping
+ansible-playbook -i inventory.aws.ini site-enterprise.yml
 ```
 
-## Интеграция с Terraform GCP
+## Интеграция с Terraform AWS
 
-После `terraform apply` в `deployment/terraform/gcp` автоматически создается:
-- `deployment/ansible/inventory.gcp.ini`
+После `terraform apply` в `deployment/terraform/aws` автоматически создаётся:
 
-Далее можно сразу запускать:
+- `deployment/ansible/inventory.aws.ini`
+
+Далее:
+
 ```bash
 cd deployment/ansible
 ansible-galaxy collection install -r requirements.yml
-ansible-playbook -i inventory.gcp.ini site-enterprise.yml
+ansible-playbook -i inventory.aws.ini site-enterprise.yml
 ```
 
 ## Jenkins orchestration
 
-Инфра job `dentlux-infra-cd` сначала выполняет Terraform, а затем этот playbook:
-- Terraform генерирует `inventory.gcp.ini`;
-- Jenkins передает SSH-ключ через credential `dentlux-ssh-key`;
-- деплой выполняется автоматически при `TF_ACTION=apply` и `RUN_ANSIBLE_DEPLOY=true`.
+Job `dentlux-infra-cd` выполняет Terraform AWS, затем этот playbook:
+
+- Terraform генерирует `inventory.aws.ini`;
+- Jenkins: `aws-terraform` (IAM access key) + `dentlux-ssh-key` (SSH);
+- деплой при `TF_ACTION=apply` и `RUN_ANSIBLE_DEPLOY=true`.

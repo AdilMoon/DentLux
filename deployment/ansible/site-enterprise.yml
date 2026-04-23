@@ -13,6 +13,16 @@
           - app_owner is defined
         fail_msg: "Set required variables in group_vars/all.yml before running."
 
+    - name: Remove legacy Docker apt source file to avoid signed-by conflicts
+      ansible.builtin.file:
+        path: /etc/apt/sources.list.d/docker.list
+        state: absent
+
+    - name: Remove legacy Docker apt key file (docker.asc) if present
+      ansible.builtin.file:
+        path: /etc/apt/keyrings/docker.asc
+        state: absent
+
   roles:
     - role: common
     - role: docker

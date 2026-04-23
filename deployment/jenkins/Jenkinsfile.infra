@@ -5,7 +5,7 @@ pipeline {
     choice(
       name: 'TF_ACTION',
       choices: ['plan', 'apply', 'destroy'],
-      description: 'Terraform action for GCP infrastructure'
+      description: 'Terraform action for AWS infrastructure'
     )
     booleanParam(
       name: 'RUN_ANSIBLE_DEPLOY',
@@ -15,7 +15,7 @@ pipeline {
     string(
       name: 'TF_VARS_FILE',
       defaultValue: 'terraform.tfvars',
-      description: 'Terraform variables file path relative to deployment/terraform/gcp'
+      description: 'Terraform variables file path relative to deployment/terraform/aws'
     )
   }
 
@@ -29,7 +29,7 @@ pipeline {
     TF_IN_AUTOMATION = 'true'
     TF_INPUT = 'false'
     TF_CLI_ARGS = '-no-color'
-    TERRAFORM_DIR = 'deployment/terraform/gcp'
+    TERRAFORM_DIR = 'deployment/terraform/aws'
     ANSIBLE_DIR = 'deployment/ansible'
     ANSIBLE_HOST_KEY_CHECKING = 'False'
   }
@@ -52,10 +52,11 @@ pipeline {
 
     stage('Terraform Init/Validate') {
       steps {
-        withCredentials([file(credentialsId: 'gcp-sa-json', variable: 'GCP_SA_FILE')]) {
+        withCredentials([usernamePassword(credentialsId: 'aws-terraform', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
           sh '''
             set -euo pipefail
-            export GOOGLE_APPLICATION_CREDENTIALS="$GCP_SA_FILE"
+            export AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY
             cd "$TERRAFORM_DIR"
             terraform init -backend=false
             terraform fmt -check -recursive
@@ -67,10 +68,11 @@ pipeline {
 
     stage('Terraform Plan') {
       steps {
-        withCredentials([file(credentialsId: 'gcp-sa-json', variable: 'GCP_SA_FILE')]) {
+        withCredentials([usernamePassword(credentialsId: 'aws-terraform', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
           sh '''
             set -euo pipefail
-            export GOOGLE_APPLICATION_CREDENTIALS="$GCP_SA_FILE"
+            export AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY
             cd "$TERRAFORM_DIR"
             terraform plan -var-file="$TF_VARS_FILE" -out=tfplan
           '''
@@ -83,10 +85,11 @@ pipeline {
         expression { params.TF_ACTION == 'apply' || params.TF_ACTION == 'destroy' }
       }
       steps {
-        withCredentials([file(credentialsId: 'gcp-sa-json', variable: 'GCP_SA_FILE')]) {
+        withCredentials([usernamePassword(credentialsId: 'aws-terraform', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
           sh '''
             set -euo pipefail
-            export GOOGLE_APPLICATION_CREDENTIALS="$GCP_SA_FILE"
+            export AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY
             cd "$TERRAFORM_DIR"
             if [ "$TF_ACTION" = "apply" ]; then
               terraform apply -auto-approve tfplan
@@ -107,9 +110,9 @@ pipeline {
           sh '''
             set -euo pipefail
             cd "$ANSIBLE_DIR"
-            test -f inventory.gcp.ini
+            test -f inventory.aws.ini
             ansible-galaxy collection install -r requirements.yml
-            ansible-playbook -i inventory.gcp.ini site-enterprise.yml \
+            ansible-playbook -i inventory.aws.ini site-enterprise.yml \
               --private-key "$SSH_KEY" \
               -e "ansible_ssh_private_key_file=$SSH_KEY"
           '''
@@ -134,8 +137,8 @@ pipeline {
 
   post {
     always {
-      archiveArtifacts artifacts: 'deployment/terraform/gcp/tfplan', allowEmptyArchive: true
-      archiveArtifacts artifacts: 'deployment/ansible/inventory.gcp.ini', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'deployment/terraform/aws/tfplan', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'deployment/ansible/inventory.aws.ini', allowEmptyArchive: true
     }
     success {
       echo 'Infra pipeline completed successfully.'

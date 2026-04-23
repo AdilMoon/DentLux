@@ -1,0 +1,3 @@
+bucket = "dentlux-terraform-state-prod"
+key    = "aws/prod/terraform.tfstate"
+region = "eu-central-1"

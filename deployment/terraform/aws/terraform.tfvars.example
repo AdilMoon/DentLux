@@ -1,0 +1,11 @@
+aws_region           = "eu-central-1"
+environment          = "prod"
+name_prefix          = "dentlux"
+vpc_cidr             = "10.20.0.0/16"
+public_subnet_cidr   = "10.20.1.0/24"
+# availability_zone  = "eu-central-1a"  # optional; default = first AZ in region
+instance_type        = "t3.medium"
+disk_size_gb         = 50
+ssh_user             = "ubuntu"
+ssh_public_key       = "cwNNK8WQhkINnpnsc8Jh1+A1cMqaLe+h4/M6smDcj18 dentlux-aws"
+allowed_ssh_cidrs    = ["2.135.159.45/32"]

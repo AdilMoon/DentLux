@@ -1,2 +1,0 @@
-bucket = "dentlux-terraform-state-prod"
-prefix = "gcp/prod"

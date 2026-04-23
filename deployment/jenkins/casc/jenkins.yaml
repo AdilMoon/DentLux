@@ -36,14 +36,14 @@ jobs:
   - script: |
       pipelineJob('dentlux-infra-cd') {
         displayName('DentLux Infra CD (Terraform + Ansible)')
-        description('Terraform GCP plan/apply/destroy + Ansible deployment + smoke checks')
+        description('Terraform AWS plan/apply/destroy + Ansible deployment + smoke checks')
         logRotator {
           numToKeep(30)
         }
         parameters {
           choiceParam('TF_ACTION', ['plan', 'apply', 'destroy'], 'Terraform action for infrastructure lifecycle')
           booleanParam('RUN_ANSIBLE_DEPLOY', true, 'Run Ansible deployment after successful terraform apply')
-          stringParam('TF_VARS_FILE', 'terraform.tfvars', 'Path to tfvars from deployment/terraform/gcp')
+          stringParam('TF_VARS_FILE', 'terraform.tfvars', 'Path to tfvars from deployment/terraform/aws')
         }
         definition {
           cpsScm {

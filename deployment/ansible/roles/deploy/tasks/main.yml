@@ -43,9 +43,17 @@
   delay: 5
   until: proxy_health.status == 200
 
+- name: Get deployed git commit from remote host
+  ansible.builtin.command:
+    cmd: git rev-parse --short HEAD
+    chdir: "{{ app_root }}"
+  register: deployed_commit
+  changed_when: false
+  become_user: "{{ app_owner }}"
+
 - name: Show release and health summary
   ansible.builtin.debug:
     msg:
-      - "Commit deployed: {{ lookup('ansible.builtin.pipe', 'cd ' ~ app_root ~ ' && git rev-parse --short HEAD') }}"
+      - "Commit deployed: {{ deployed_commit.stdout }}"
       - "Backend health: {{ backend_health.status }}"
       - "Reverse proxy health: {{ proxy_health.status }}"
