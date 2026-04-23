@@ -32,6 +32,8 @@ cp terraform.tfvars.example terraform.tfvars
 
 Заполните `ssh_public_key`, `allowed_ssh_cidrs` (ваш IP `/32`). Для официального AMI Ubuntu пользователь по умолчанию — **`ubuntu`** (`ssh_user`).
 
+Если хотите видеть ресурсы в AWS **myApplications**, укажите `aws_application_tag_value` (значение тега `awsApplication` из вашего приложения).
+
 ## Команды
 
 ```bash

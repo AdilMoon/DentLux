@@ -63,3 +63,9 @@ variable "allowed_ssh_cidrs" {
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
+
+variable "aws_application_tag_value" {
+  description = "Optional AWS myApplications tag value (awsApplication)"
+  type        = string
+  default     = ""
+}

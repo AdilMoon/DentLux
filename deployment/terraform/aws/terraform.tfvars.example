@@ -1,6 +1,7 @@
 aws_region           = "eu-central-1"
 environment          = "prod"
 name_prefix          = "dentlux"
+aws_application_tag_value = "arn:aws:resource-groups:eu-central-1:748579767249:group/dentlux/042i7yvnyyxmyrd8b2xmme92gw"
 vpc_cidr             = "10.20.0.0/16"
 public_subnet_cidr   = "10.20.1.0/24"
 # availability_zone  = "eu-central-1a"  # optional; default = first AZ in region

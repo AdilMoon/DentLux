@@ -8,11 +8,16 @@ provider "aws" {
   region = var.aws_region
 
   default_tags {
-    tags = {
-      Project     = var.name_prefix
-      Environment = var.environment
-      ManagedBy   = "terraform"
-    }
+    tags = merge(
+      {
+        Project     = var.name_prefix
+        Environment = var.environment
+        ManagedBy   = "terraform"
+      },
+      var.aws_application_tag_value != "" ? {
+        awsApplication = var.aws_application_tag_value
+      } : {}
+    )
   }
 }
 
