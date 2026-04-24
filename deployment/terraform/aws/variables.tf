@@ -59,7 +59,10 @@ variable "ssh_public_key" {
 }
 
 variable "allowed_ssh_cidrs" {
-  description = "Allowed source CIDRs for SSH (port 22)"
+  description = <<-EOT
+    Source IPv4 CIDRs allowed to reach the instance on TCP/22 (your laptop/public IP as /32), NOT the Elastic IP of the server.
+    If Ansible or ssh says "Connection refused" or times out, compare this list with your current public IP (curl -4 ifconfig.me).
+  EOT
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }

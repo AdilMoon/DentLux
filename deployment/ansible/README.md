@@ -54,7 +54,20 @@ terraform output -raw public_ip
 
 Скопируйте IP в `deployment/ansible/inventory.aws.ini` в строку `[dentlux]`, либо снова выполните `terraform apply`, чтобы `local_file` перезаписал `inventory.aws.ini`.
 
-3. **Security Group** — в `allowed_ssh_cidrs` должен быть **текущий публичный IP** вашей сети (`x.x.x.x/32`). Иначе SSH с вашего ПК может не проходить.
+3. **Security Group (`allowed_ssh_cidrs`) — частая ошибка**  
+   В `inventory.aws.ini` указан **IP сервера** (Elastic IP). Это не то же самое, что **IP вашего ПК**, с которого идёт Ansible/SSH.  
+   В Terraform переменная `allowed_ssh_cidrs` задаёт **кто может подключаться к порту 22** (обычно ваш домашний/офисный IP в виде `a.b.c.d/32`).  
+   Узнать свой текущий публичный IP:
+   ```bash
+   curl -4 -sS https://ifconfig.me ; echo
+   ```
+   Добавьте этот адрес в `allowed_ssh_cidrs` в `deployment/terraform/aws/terraform.tfvars`, затем:
+   ```bash
+   cd deployment/terraform/aws
+   terraform apply -var-file=terraform.tfvars -auto-approve
+   ```
+   После смены правила в SG подождите несколько секунд и снова `ansible-playbook ...`.  
+   (Если в `terraform.tfvars` оставить чужой или старый `/32`, AWS может отбрасывать трафик — часто это **timeout**, реже ведёт себя как **refused** в зависимости от сети.)
 
 4. Проверка с машины, где запускаете Ansible:
 
