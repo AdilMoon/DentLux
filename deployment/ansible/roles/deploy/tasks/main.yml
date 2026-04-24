@@ -22,6 +22,7 @@
     chdir: "{{ app_root }}"
   register: compose_up
   changed_when: "'Started' in compose_up.stdout or 'Recreated' in compose_up.stdout or 'Created' in compose_up.stdout"
+  when: not ansible_check_mode
 
 - name: Wait for backend health endpoint
   ansible.builtin.uri:
@@ -32,6 +33,7 @@
   retries: 20
   delay: 5
   until: backend_health.status == 200
+  when: not ansible_check_mode
 
 - name: Wait for reverse proxy health endpoint
   ansible.builtin.uri:
@@ -42,6 +44,7 @@
   retries: 20
   delay: 5
   until: proxy_health.status == 200
+  when: not ansible_check_mode
 
 - name: Get deployed git commit from remote host
   ansible.builtin.command:
@@ -55,5 +58,5 @@
   ansible.builtin.debug:
     msg:
       - "Commit deployed: {{ deployed_commit.stdout }}"
-      - "Backend health: {{ backend_health.status }}"
-      - "Reverse proxy health: {{ proxy_health.status }}"
+      - "Backend health: {{ backend_health.status | default('skipped (check mode or health tasks skipped)') }}"
+      - "Reverse proxy health: {{ proxy_health.status | default('skipped (check mode or health tasks skipped)') }}"

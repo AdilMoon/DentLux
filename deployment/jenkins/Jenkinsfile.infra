@@ -14,8 +14,8 @@ pipeline {
     )
     string(
       name: 'TF_VARS_FILE',
-      defaultValue: 'terraform.tfvars',
-      description: 'Terraform variables file path relative to deployment/terraform/aws'
+      defaultValue: 'terraform.tfvars.example',
+      description: 'Terraform variables file relative to deployment/terraform/aws (repo ships .example; use Secret File or override for private tfvars)'
     )
   }
 
@@ -74,7 +74,12 @@ pipeline {
             export AWS_ACCESS_KEY_ID
             export AWS_SECRET_ACCESS_KEY
             cd "$TERRAFORM_DIR"
-            terraform plan -var-file="$TF_VARS_FILE" -out=tfplan
+            TF_VARS_RESOLVED="$TF_VARS_FILE"
+            if [ ! -f "$TF_VARS_FILE" ]; then
+              TF_VARS_RESOLVED="terraform.tfvars.example"
+              echo "[WARN] $TF_VARS_FILE not found; using ${TF_VARS_RESOLVED} (commit a real tfvars or set TF_VARS_FILE)."
+            fi
+            terraform plan -var-file="$TF_VARS_RESOLVED" -out=tfplan
           '''
         }
       }
@@ -94,7 +99,12 @@ pipeline {
             if [ "$TF_ACTION" = "apply" ]; then
               terraform apply -auto-approve tfplan
             else
-              terraform destroy -auto-approve -var-file="$TF_VARS_FILE"
+              TF_VARS_RESOLVED="$TF_VARS_FILE"
+              if [ ! -f "$TF_VARS_FILE" ]; then
+                TF_VARS_RESOLVED="terraform.tfvars.example"
+                echo "[WARN] $TF_VARS_FILE not found; using ${TF_VARS_RESOLVED} for destroy."
+              fi
+              terraform destroy -auto-approve -var-file="$TF_VARS_RESOLVED"
             fi
           '''
         }

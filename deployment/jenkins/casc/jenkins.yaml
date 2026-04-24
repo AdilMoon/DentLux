@@ -43,7 +43,7 @@ jobs:
         parameters {
           choiceParam('TF_ACTION', ['plan', 'apply', 'destroy'], 'Terraform action for infrastructure lifecycle')
           booleanParam('RUN_ANSIBLE_DEPLOY', true, 'Run Ansible deployment after successful terraform apply')
-          stringParam('TF_VARS_FILE', 'terraform.tfvars', 'Path to tfvars from deployment/terraform/aws')
+          stringParam('TF_VARS_FILE', 'terraform.tfvars.example', 'Path to tfvars from deployment/terraform/aws (fallback in Jenkinsfile if file missing)')
         }
         definition {
           cpsScm {
