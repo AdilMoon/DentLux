@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Button from '../components/Button';
@@ -11,7 +11,7 @@ import Modal from '../components/Modal';
 import { Calendar, Clock, LogOut, FileText, X, User, Mail, Phone, Briefcase, Award, Search, Filter, Star } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { servicesApi, doctorsApi, appointmentsApi, paymentsApi, medicalRecordApi } from '../api';
-import { scheduleApi } from '../api/scheduleApi';
+import { scheduleApi, type CalendarDay } from '../api/scheduleApi';
 import { reviewApi, Review } from '../api/reviewApi';
 import { validateCardNumber, validateExpiry, validateCvv, formatCardNumber, formatExpiry } from '../utils/cardUtils';
 import { Service, Doctor, Appointment, Payment, AppointmentStatus, AppointmentStatusLabels, PaymentStatus, PaymentStatusLabels, PaymentMethod, PaymentMethodLabels } from '../types';
@@ -30,6 +30,8 @@ const ClientDashboard: React.FC = () => {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
   const [allTimeSlots, setAllTimeSlots] = useState<Array<{ time: string; available: boolean }>>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
+  const [loadingCalendar, setLoadingCalendar] = useState(false);
 
   // Reset doctor selection when service changes
   useEffect(() => {
@@ -51,6 +53,30 @@ const ClientDashboard: React.FC = () => {
       setSelectedTime('');
     }
   }, [selectedDoctor, selectedDate]);
+
+  const loadAvailabilityCalendar = useCallback(async () => {
+    if (!selectedDoctor) return;
+    try {
+      setLoadingCalendar(true);
+      const now = new Date();
+      const start = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const res = await scheduleApi.getAvailabilityCalendar(selectedDoctor, start, 35);
+      setCalendarDays(res.calendar || []);
+    } catch (error: unknown) {
+      console.error(error);
+      setCalendarDays([]);
+    } finally {
+      setLoadingCalendar(false);
+    }
+  }, [selectedDoctor]);
+
+  useEffect(() => {
+    if (selectedService && selectedDoctor) {
+      void loadAvailabilityCalendar();
+    } else {
+      setCalendarDays([]);
+    }
+  }, [selectedService, selectedDoctor, loadAvailabilityCalendar]);
   
   // Data state
   const [services, setServices] = useState<Service[]>([]);
@@ -261,12 +287,24 @@ const ClientDashboard: React.FC = () => {
       }
       
       toast.success('Жазылу сәтті құрылды!');
-      
-      // Обновляем список доступных слотов, если доктор и дата все еще выбраны
-      if (selectedDoctor && selectedDate) {
+
+      const doctorIdAfter = selectedDoctor;
+      const dateAfter = selectedDate;
+
+      if (doctorIdAfter && dateAfter) {
         await loadAvailableSlots();
       }
-      
+      if (doctorIdAfter) {
+        const now = new Date();
+        const start = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        try {
+          const res = await scheduleApi.getAvailabilityCalendar(doctorIdAfter, start, 35);
+          setCalendarDays(res.calendar || []);
+        } catch {
+          /* ignore */
+        }
+      }
+
       // Reset form
       setSelectedService('');
       setSelectedDoctor('');
@@ -602,6 +640,56 @@ const ClientDashboard: React.FC = () => {
               {selectedService && selectedDoctor && (
                 <Card title="3. Уақыт таңдау">
                   <div className="space-y-6">
+                    <div>
+                      <label className="block text-xs font-black text-primary-900 uppercase tracking-widest mb-2">
+                        Бос күндер (келесі 35 күн) / Свободные дни
+                      </label>
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">
+                        Жасыл — бос слот бар · Қызыл шекара — қабылдау бар, бос уақыт жоқ · Сұр — демалыс
+                      </p>
+                      {loadingCalendar ? (
+                        <div className="flex items-center gap-2 py-4 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
+                          Күнтізбе жүктелуде...
+                        </div>
+                      ) : (
+                        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+                          {calendarDays.map((day) => {
+                            const selectable = day.working && day.hasAvailability;
+                            const [, mm, dd] = day.date.split('-');
+                            const isSelected = selectedDate === day.date;
+                            return (
+                              <button
+                                key={day.date}
+                                type="button"
+                                disabled={!selectable}
+                                title={day.date}
+                                onClick={() => {
+                                  setSelectedDate(day.date);
+                                  setSelectedTime('');
+                                }}
+                                className={`flex-shrink-0 w-16 py-2 border-2 flex flex-col items-center justify-center transition-all font-black uppercase tracking-tighter ${
+                                  !day.working
+                                    ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : !day.hasAvailability
+                                      ? 'border-red-300 bg-amber-50 text-gray-600 cursor-not-allowed'
+                                      : isSelected
+                                        ? 'border-blue-600 bg-blue-600 text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'
+                                        : 'border-green-600 bg-white text-primary-900 hover:bg-green-50'
+                                }`}
+                              >
+                                <span className="text-lg leading-none">{dd}</span>
+                                <span className="text-[9px] opacity-80 mt-1">{mm}</span>
+                                {day.hasAvailability && (
+                                  <span className="text-[8px] text-green-700 mt-0.5">{day.freeSlotCount}</span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div>
                         <label className="block text-xs font-black text-primary-900 uppercase tracking-widest mb-3">Күнді таңдаңыз</label>

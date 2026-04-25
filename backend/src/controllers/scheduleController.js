@@ -37,6 +37,34 @@ class ScheduleController {
   }
 
   /**
+   * Календарь доступности: по каждому дню — есть ли приём и сколько свободных слотов
+   */
+  async getAvailabilityCalendar(req, res, next) {
+    try {
+      const { doctorId } = req.params;
+      let { start, days } = req.query;
+
+      if (!start) {
+        const t = new Date();
+        start = `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, '0')}-${String(t.getUTCDate()).padStart(2, '0')}`;
+      }
+
+      const daysNum = days !== undefined ? parseInt(String(days), 10) : 35;
+      const data = await scheduleService.getAvailabilityCalendar(doctorId, start, daysNum);
+
+      res.json({
+        success: true,
+        data,
+      });
+    } catch (error) {
+      if (error.isOperational) {
+        error.status = error.statusCode;
+      }
+      next(error);
+    }
+  }
+
+  /**
    * Обновить расписание доктора (только для админа)
    */
   async updateSchedule(req, res, next) {

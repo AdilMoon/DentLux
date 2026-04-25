@@ -112,7 +112,7 @@ class AppointmentRepository {
           notes,
         },
         include: {
-          client: { select: { id: true, fullName: true, email: true } },
+          client: { select: { id: true, fullName: true, email: true, phone: true } },
           doctor: { select: { id: true, fullName: true, email: true } },
           service: { select: { id: true, name: true, price: true } },
         },
@@ -190,23 +190,48 @@ class AppointmentRepository {
     });
   }
 
-  // Найти записи доктора по дате
+  // Найти записи доктора по дате (YYYY-MM-DD, границы по UTC — как в @db.Date)
   async findByDoctorIdAndDate(doctorId, date) {
-    const dateObj = new Date(date);
-    dateObj.setHours(0, 0, 0, 0);
-    const nextDay = new Date(dateObj);
-    nextDay.setDate(nextDay.getDate() + 1);
+    const start = new Date(`${date}T00:00:00.000Z`);
+    const endExclusive = new Date(`${date}T00:00:00.000Z`);
+    endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);
 
     return await prisma.appointment.findMany({
       where: {
         doctorId,
         appointmentDate: {
-          gte: dateObj,
-          lt: nextDay,
+          gte: start,
+          lt: endExclusive,
         },
       },
       select: {
         id: true,
+        appointmentTime: true,
+        status: true,
+      },
+    });
+  }
+
+  /**
+   * Записи доктора за диапазон дат (date — строки YYYY-MM-DD, границы по UTC как у Prisma @db.Date)
+   */
+  async findByDoctorIdAndDateRange(doctorId, startYmd, endYmd) {
+    const start = new Date(`${startYmd}T00:00:00.000Z`);
+    const endExclusive = new Date(`${endYmd}T00:00:00.000Z`);
+    endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);
+
+    return await prisma.appointment.findMany({
+      where: {
+        doctorId,
+        appointmentDate: {
+          gte: start,
+          lt: endExclusive,
+        },
+        status: { notIn: ['CANCELLED', 'MISSED'] },
+      },
+      select: {
+        id: true,
+        appointmentDate: true,
         appointmentTime: true,
         status: true,
       },

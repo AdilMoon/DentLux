@@ -17,6 +17,23 @@ router.get(
   scheduleController.getAvailableSlots.bind(scheduleController)
 );
 
+router.get(
+  '/doctors/:doctorId/availability-calendar',
+  [
+    param('doctorId').isUUID().withMessage('Некорректный ID доктора'),
+    query('start')
+      .optional()
+      .matches(/^\d{4}-\d{2}-\d{2}$/)
+      .withMessage('Некорректная дата start (формат: YYYY-MM-DD)'),
+    query('days')
+      .optional()
+      .isInt({ min: 1, max: 90 })
+      .withMessage('days: целое число 1–90'),
+    handleValidationErrors,
+  ],
+  scheduleController.getAvailabilityCalendar.bind(scheduleController)
+);
+
 // Защищенный endpoint для обновления расписания (только админ)
 router.use(authMiddleware);
 router.use(roleMiddleware('ADMIN'));

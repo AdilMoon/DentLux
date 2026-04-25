@@ -45,6 +45,10 @@ services:
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
       # Тот же текст в заголовке X-Automation-Secret в узле HTTP n8n (по умолчанию 12345)
       - AUTOMATION_SECRET=${AUTOMATION_SECRET:-12345}
+      # SMS после записи (Twilio; опционально)
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER:-}
     depends_on:
       - db
     command: >
@@ -114,7 +118,7 @@ services:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-DentluxAdmin2026!}
       - GF_SERVER_ROOT_URL=http://localhost:3000
       - GF_RENDERING_SERVER_URL=http://renderer:8081/render
       - GF_RENDERING_CALLBACK_URL=http://grafana:3000/

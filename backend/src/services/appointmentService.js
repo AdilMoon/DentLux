@@ -1,5 +1,6 @@
 const appointmentRepository = require('../repositories/appointmentRepository');
 const emailService = require('../utils/emailService');
+const smsService = require('../utils/smsService');
 const clientBlockService = require('./clientBlockService');
 const doctorService = require('./doctorService');
 const AppError = require('../utils/errors');
@@ -47,10 +48,11 @@ class AppointmentService {
         ...data,
         clientId,
       });
-      
+
+      const formatted = this.formatAppointment(appointment);
+
       // Отправляем email уведомление клиенту о создании записи
       try {
-        const formatted = this.formatAppointment(appointment);
         if (appointment.client.email) {
           await emailService.sendAppointmentConfirmation(appointment.client.email, {
             clientName: formatted.clientName,
@@ -65,8 +67,21 @@ class AppointmentService {
         // Не прерываем создание записи, если email не отправился
         console.error('Ошибка отправки email уведомления:', emailError);
       }
-      
-      return this.formatAppointment(appointment);
+
+      try {
+        if (appointment.client.phone) {
+          await smsService.sendAppointmentBookingSms(appointment.client.phone, {
+            date: formatted.appointmentDate,
+            time: formatted.appointmentTime,
+            doctorName: formatted.doctorName,
+            serviceName: formatted.serviceName,
+          });
+        }
+      } catch (smsError) {
+        console.error('Ошибка отправки SMS уведомления:', smsError);
+      }
+
+      return formatted;
     } catch (error) {
       // Преобразуем ошибки репозитория в AppError
       if (error.name === 'NotFoundError' || error.name === 'ValidationError' || error.name === 'ForeignKeyError') {

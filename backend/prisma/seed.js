@@ -1,209 +1,328 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient, Prisma } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log('🌱 Начало заполнения базы данных...\n');
+const DEFAULT_PASSWORD = 'Dentlux2026!';
 
-  // Очистка существующих данных (в порядке зависимости)
-  console.log('🧹 Очистка существующих данных...');
-  await prisma.refund.deleteMany();
-  await prisma.expense.deleteMany();
-  await prisma.payment.deleteMany();
-  await prisma.appointment.deleteMany();
-  await prisma.service.deleteMany();
-  await prisma.doctor.deleteMany();
-  await prisma.user.deleteMany();
+function toDecimal(value) {
+  return new Prisma.Decimal(value);
+}
 
-  // Создание администратора
-  console.log('👤 Создание администратора...');
-  const adminPasswordHash = await bcrypt.hash('admin123', 10);
-  const admin = await prisma.user.create({
+async function tableExists(tableName) {
+  const rows = await prisma.$queryRaw`
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = ${tableName}
+    ) AS "exists"
+  `;
+  return Boolean(rows?.[0]?.exists);
+}
+
+async function createUser({ email, fullName, phone, role, password = DEFAULT_PASSWORD, avatarUrl = null }) {
+  const passwordHash = await bcrypt.hash(password, 10);
+  return prisma.user.create({
     data: {
-      email: 'admin@dentreserve.com',
-      passwordHash: adminPasswordHash,
-      role: 'ADMIN',
-      fullName: 'Әкімші',
-      phone: '+77001234567',
+      email,
+      fullName,
+      phone,
+      role,
+      avatarUrl,
+      passwordHash,
     },
   });
-  console.log(`✅ Создан администратор: ${admin.email}`);
+}
 
-  // Создание услуг (на казахском языке)
-  console.log('\n🦷 Создание услуг...');
+async function main() {
+  console.log('🌱 Детальное заполнение DentLux (RU + KZ)...\n');
+
+  const tableMap = {
+    users: await tableExists('users'),
+    doctors: await tableExists('doctors'),
+    services: await tableExists('services'),
+    appointments: await tableExists('appointments'),
+    payments: await tableExists('payments'),
+    expenses: await tableExists('expenses'),
+    refunds: await tableExists('refunds'),
+    contactMessages: await tableExists('contact_messages'),
+    medicalRecords: await tableExists('medical_records'),
+    reviews: await tableExists('reviews'),
+    auditLogs: await tableExists('audit_logs'),
+    passwordResetTokens: await tableExists('password_reset_tokens'),
+    clientBlocks: await tableExists('client_blocks'),
+  };
+
+  console.log('🧹 Очистка существующих данных...');
+  if (tableMap.clientBlocks) await prisma.clientBlock.deleteMany();
+  if (tableMap.passwordResetTokens) await prisma.passwordResetToken.deleteMany();
+  if (tableMap.auditLogs) await prisma.auditLog.deleteMany();
+  if (tableMap.reviews) await prisma.review.deleteMany();
+  if (tableMap.medicalRecords) await prisma.medicalRecord.deleteMany();
+  if (tableMap.contactMessages) await prisma.contactMessage.deleteMany();
+  if (tableMap.refunds) await prisma.refund.deleteMany();
+  if (tableMap.expenses) await prisma.expense.deleteMany();
+  if (tableMap.payments) await prisma.payment.deleteMany();
+  if (tableMap.appointments) await prisma.appointment.deleteMany();
+  if (tableMap.services) await prisma.service.deleteMany();
+  if (tableMap.doctors) await prisma.doctor.deleteMany();
+  if (tableMap.users) await prisma.user.deleteMany();
+
+  console.log('👤 Создание администраторов...');
+  const adminRu = await createUser({
+    email: 'admin.ru@dentlux.kz',
+    fullName: 'Иван Петров',
+    phone: '+77010000001',
+    role: 'ADMIN',
+  });
+  const adminKk = await createUser({
+    email: 'admin.kk@dentlux.kz',
+    fullName: 'Айгерим Нуртаева',
+    phone: '+77010000002',
+    role: 'ADMIN',
+  });
+
+  console.log('🦷 Создание услуг (рус/қаз)...');
   const servicesData = [
-    {
-      name: 'Кеңес',
-      description: 'Стоматологтың алғашқы кеңесі',
-      durationMinutes: 30,
-      price: 5000,
-      isActive: true,
-    },
-    {
-      name: 'Кариес емдеу',
-      description: 'Кариесті пломбалаумен емдеу',
-      durationMinutes: 60,
-      price: 15000,
-      isActive: true,
-    },
-    {
-      name: 'Кәсіби тазалау',
-      description: 'Тістерді кәсіби тазалау',
-      durationMinutes: 45,
-      price: 8000,
-      isActive: true,
-    },
-    {
-      name: 'Тіс алу',
-      description: 'Тіс алу',
-      durationMinutes: 30,
-      price: 12000,
-      isActive: true,
-    },
-    {
-      name: 'Тіс имплантациясы',
-      description: 'Тіс имплантатын орнату',
-      durationMinutes: 120,
-      price: 150000,
-      isActive: true,
-    },
-    {
-      name: 'Тіс протездеу',
-      description: 'Тіс протезін орнату',
-      durationMinutes: 90,
-      price: 80000,
-      isActive: true,
-    },
-    {
-      name: 'Ортодонтиялық емдеу',
-      description: 'Тіс қатарларын түзету',
-      durationMinutes: 60,
-      price: 45000,
-      isActive: true,
-    },
-    {
-      name: 'Пародонтоз емдеу',
-      description: 'Қанайналым ауруларын емдеу',
-      durationMinutes: 45,
-      price: 25000,
-      isActive: true,
-    },
-    {
-      name: 'Балаларға кеңес',
-      description: 'Балалар стоматологының кеңесі',
-      durationMinutes: 30,
-      price: 6000,
-      isActive: true,
-    },
-    {
-      name: 'Тіс ағындарын емдеу',
-      description: 'Тіс тамырларын емдеу',
-      durationMinutes: 90,
-      price: 35000,
-      isActive: true,
-    },
-    {
-      name: 'Тістерді ағарту',
-      description: 'Тістерді ағарту процедурасы',
-      durationMinutes: 60,
-      price: 30000,
-      isActive: true,
-    },
-    {
-      name: 'Рентген снимогі',
-      description: 'Тіс рентген снимогі',
-      durationMinutes: 15,
-      price: 5000,
-      isActive: true,
-    },
+    ['Консультация / Кеңес беру', 30, 6000],
+    ['Профессиональная чистка / Кәсіби тазалау', 45, 12000],
+    ['Лечение кариеса / Кариес емдеу', 60, 18000],
+    ['Лечение пульпита / Пульпит емдеу', 90, 30000],
+    ['Удаление зуба / Тіс жұлу', 40, 14000],
+    ['Имплантация / Имплантация', 120, 180000],
+    ['Протезирование / Протездеу', 90, 95000],
+    ['Ортодонтия (брекеты) / Брекет орнату', 75, 80000],
+    ['Детская стоматология / Балалар стоматологиясы', 30, 9000],
+    ['Отбеливание / Тісті ағарту', 60, 45000],
   ];
 
-  for (const serviceData of servicesData) {
+  const services = [];
+  for (const [name, durationMinutes, price] of servicesData) {
     const service = await prisma.service.create({
-      data: serviceData,
-    });
-    console.log(`✅ Создана услуга: ${service.name} - ${service.price} тг`);
-  }
-
-  // Создание докторов
-  console.log('\n👨‍⚕️ Создание докторов...');
-  const specializations = [
-    'Терапевт',
-    'Хирург',
-    'Ортодонт',
-    'Ортопед',
-    'Пародонтолог',
-    'Эндодонт',
-    'Балалар стоматологы',
-    'Имплантолог',
-    'Протезист',
-    'Гигиенист',
-  ];
-
-  const doctorsData = [
-    { name: 'Асылбек Нұрланов', email: 'asylbek.nurlanov@dentreserve.com', password: 'Asylbek2024!', phone: '+77001234501', spec: 'Терапевт' },
-    { name: 'Динара Қасымова', email: 'dinara.kasymova@dentreserve.com', password: 'Dinara99@clinic', phone: '+77001234502', spec: 'Хирург' },
-    { name: 'Ерлан Тұрсынов', email: 'erlan.tursynov@dentreserve.com', password: 'Erlan2024#dent', phone: '+77001234503', spec: 'Ортодонт' },
-    { name: 'Айгүл Әбілдаева', email: 'aigul.abildayeva@dentreserve.com', password: 'Aigul2024$doctor', phone: '+77001234504', spec: 'Ортопед' },
-    { name: 'Марат Жұмабеков', email: 'marat.zhumabekov@dentreserve.com', password: 'Marat2024%med', phone: '+77001234505', spec: 'Пародонтолог' },
-    { name: 'Гүлнұр Сәбитова', email: 'gulnur.sabitova@dentreserve.com', password: 'Gulnur2024^treatment', phone: '+77001234506', spec: 'Эндодонт' },
-    { name: 'Нұрлан Бейсенов', email: 'nurlan.beisenov@dentreserve.com', password: 'Nurlan2024&doctor', phone: '+77001234507', spec: 'Балалар стоматологы' },
-    { name: 'Алтынай Қадырова', email: 'altynai.kadyrova@dentreserve.com', password: 'Altynai2024*doc', phone: '+77001234508', spec: 'Имплантолог' },
-    { name: 'Бауыржан Омаров', email: 'bauyrzhan.omarov@dentreserve.com', password: 'Bauyrzhan2024(dent)', phone: '+77001234509', spec: 'Протезист' },
-    { name: 'Ақмарал Нұрғалиева', email: 'akmaral.nurgaliyeva@dentreserve.com', password: 'Akmaral2024)clinic', phone: '+77001234510', spec: 'Гигиенист' },
-    { name: 'Талғат Айтбаев', email: 'talgat.aytbaev@dentreserve.com', password: 'Talgat2024-doctor', phone: '+77001234511', spec: 'Терапевт' },
-    { name: 'Жанар Есқалиева', email: 'zhanar.eskaliyeva@dentreserve.com', password: 'Zhanar2024_dentist', phone: '+77001234512', spec: 'Хирург' },
-    { name: 'Дастан Құдайбергенов', email: 'dastan.kudaybergenov@dentreserve.com', password: 'Dastan2024+doctor', phone: '+77001234513', spec: 'Ортодонт' },
-    { name: 'Сауле Мұхамеджанова', email: 'saule.mukhamedzhanova@dentreserve.com', password: 'Saule2024=treatment', phone: '+77001234514', spec: 'Ортопед' },
-    { name: 'Асхат Рахманов', email: 'askhat.rakhmanov@dentreserve.com', password: 'Askhat2024|doctor', phone: '+77001234515', spec: 'Пародонтолог' },
-    { name: 'Гүлшат Жақсылықова', email: 'gulshat.zhaksylykova@dentreserve.com', password: 'Gulshat2024~dent', phone: '+77001234516', spec: 'Эндодонт' },
-    { name: 'Қанат Әлімов', email: 'kanat.alimov@dentreserve.com', password: 'Kanat2024`doctor', phone: '+77001234517', spec: 'Балалар стоматологы' },
-    { name: 'Аружан Төлеубаева', email: 'aruzhan.toleubayeva@dentreserve.com', password: 'Aruzhan2024{doctor}', phone: '+77001234518', spec: 'Имплантолог' },
-    { name: 'Рустем Кенжебаев', email: 'rustem.kenzhebaev@dentreserve.com', password: 'Rustem2024}dent', phone: '+77001234519', spec: 'Протезист' },
-    { name: 'Мәдина Серікбаева', email: 'madina.serikbayeva@dentreserve.com', password: 'Madina2024:doctor', phone: '+77001234520', spec: 'Гигиенист' },
-  ];
-
-  const createdDoctors = [];
-  for (const docData of doctorsData) {
-    const passwordHash = await bcrypt.hash(docData.password, 10);
-    const user = await prisma.user.create({
       data: {
-        email: docData.email,
-        passwordHash: passwordHash,
-        role: 'DOCTOR',
-        fullName: docData.name,
-        phone: docData.phone,
+        name,
+        description: `Услуга DentLux: ${name}`,
+        durationMinutes,
+        price: toDecimal(price),
+        isActive: true,
       },
     });
+    services.push(service);
+  }
 
+  console.log('👨‍⚕️ Создание врачей...');
+  const doctorProfiles = [
+    { name: 'Асылбек Нурланов', email: 'asylbek@dentlux.kz', phone: '+77020000001', spec: 'Терапевт', exp: 7 },
+    { name: 'Динара Касымова', email: 'dinara@dentlux.kz', phone: '+77020000002', spec: 'Хирург', exp: 11 },
+    { name: 'Ерлан Турсынов', email: 'erlan@dentlux.kz', phone: '+77020000003', spec: 'Ортодонт', exp: 9 },
+    { name: 'Айгуль Абильдаева', email: 'aigul@dentlux.kz', phone: '+77020000004', spec: 'Ортопед', exp: 13 },
+    { name: 'Нурлан Бейсенов', email: 'nurlan@dentlux.kz', phone: '+77020000005', spec: 'Балалар стоматологы', exp: 8 },
+    { name: 'Гульнур Сабитова', email: 'gulnur@dentlux.kz', phone: '+77020000006', spec: 'Эндодонт', exp: 10 },
+  ];
+
+  const doctors = [];
+  for (const profile of doctorProfiles) {
+    const user = await createUser({
+      email: profile.email,
+      fullName: profile.name,
+      phone: profile.phone,
+      role: 'DOCTOR',
+    });
     const doctor = await prisma.doctor.create({
       data: {
         userId: user.id,
-        specialization: docData.spec,
-        experienceYears: Math.floor(Math.random() * 20) + 1, // Случайный опыт от 1 до 20 лет
+        specialization: profile.spec,
+        experienceYears: profile.exp,
+        workSchedule: JSON.stringify({
+          mon: '09:00-18:00',
+          tue: '09:00-18:00',
+          wed: '09:00-18:00',
+          thu: '09:00-18:00',
+          fri: '09:00-18:00',
+          sat: '10:00-15:00',
+        }),
+      },
+    });
+    doctors.push({ user, doctor });
+  }
+
+  console.log('🧑‍🤝‍🧑 Создание клиентов (рус/қаз)...');
+  const clientsData = [
+    { name: 'Алексей Соколов', email: 'aleksey.sokolov@mail.ru', phone: '+77030000001' },
+    { name: 'Мария Иванова', email: 'maria.ivanova@mail.ru', phone: '+77030000002' },
+    { name: 'Екатерина Смирнова', email: 'katya.smirnova@mail.ru', phone: '+77030000003' },
+    { name: 'Павел Орлов', email: 'pavel.orlov@mail.ru', phone: '+77030000004' },
+    { name: 'Жанар Алимжанова', email: 'zhanar.alimzhanova@mail.kz', phone: '+77030000005' },
+    { name: 'Еркебулан Серик', email: 'erkebulan.serik@mail.kz', phone: '+77030000006' },
+    { name: 'Аружан Куаныш', email: 'aruzhan.kuanysh@mail.kz', phone: '+77030000007' },
+    { name: 'Данияр Толеуов', email: 'daniyar.toleuov@mail.kz', phone: '+77030000008' },
+    { name: 'Светлана Руднева', email: 'sveta.rudneva@mail.ru', phone: '+77030000009' },
+    { name: 'Тимур Абдыкадыров', email: 'timur.abdykadyrov@mail.kz', phone: '+77030000010' },
+    { name: 'Ольга Романенко', email: 'olga.romanenko@mail.ru', phone: '+77030000011' },
+    { name: 'Камила Жумабаева', email: 'kamila.zhumabayeva@mail.kz', phone: '+77030000012' },
+  ];
+
+  const clients = [];
+  for (const c of clientsData) {
+    clients.push(await createUser({ email: c.email, fullName: c.name, phone: c.phone, role: 'CLIENT' }));
+  }
+
+  console.log('📅 Создание записей, оплат, медкарт, отзывов...');
+  const statuses = ['PENDING', 'ARRIVED', 'VISITED', 'COMPLETED', 'CANCELLED'];
+  const payments = [];
+
+  for (let i = 0; i < 28; i += 1) {
+    const client = clients[i % clients.length];
+    const doctorUser = doctors[i % doctors.length].user;
+    const service = services[i % services.length];
+    const day = (i % 25) + 1;
+    const appointmentDate = new Date(`2026-04-${String(day).padStart(2, '0')}T00:00:00.000Z`);
+    const appointmentTime = new Date(`1970-01-01T${String(9 + (i % 8)).padStart(2, '0')}:${i % 2 ? '30' : '00'}:00.000Z`);
+    const status = statuses[i % statuses.length];
+
+    const appointment = await prisma.appointment.create({
+      data: {
+        clientId: client.id,
+        doctorId: doctorUser.id,
+        serviceId: service.id,
+        appointmentDate,
+        appointmentTime,
+        status,
+        notes: i % 2 ? 'Повторный визит / Қайта тексеру' : 'Первичная консультация / Алғашқы қабылдау',
       },
     });
 
-    createdDoctors.push({ name: docData.name, email: docData.email, password: docData.password });
-    console.log(`✅ Создан доктор: ${docData.name} (${docData.spec}) - ${docData.email}`);
+    const payment = tableMap.payments ? await prisma.payment.create({
+      data: {
+        appointmentId: appointment.id,
+        amount: service.price,
+        status: status === 'CANCELLED' ? 'REFUNDED' : i % 3 === 0 ? 'PENDING' : 'PAID',
+        paymentMethod: i % 2 === 0 ? 'CARD' : 'CASH',
+        gatewayType: i % 2 === 0 ? 'KaspiPay' : 'POS',
+        gatewayTransactionId: `DLX-${20260000 + i}`,
+      },
+    }) : null;
+    if (payment) payments.push(payment);
+
+    if ((status === 'VISITED' || status === 'COMPLETED') && tableMap.medicalRecords) {
+      await prisma.medicalRecord.create({
+        data: {
+          appointmentId: appointment.id,
+          clientId: client.id,
+          doctorId: doctorUser.id,
+          diagnosis: 'Кариес средней глубины / Орташа терең кариес',
+          treatment: 'Пломбирование композитом / Композитпен пломбалау',
+          notes: 'Рекомендован осмотр через 6 месяцев / 6 айдан кейін тексеріс',
+          prescriptions: 'Паста с фтором, ирригатор / Фторлы паста, ирригатор',
+        },
+      });
+
+      if (tableMap.reviews) {
+        await prisma.review.create({
+          data: {
+            appointmentId: appointment.id,
+            clientId: client.id,
+            doctorId: doctorUser.id,
+            serviceId: service.id,
+            rating: 4 + (i % 2),
+            comment: i % 2
+              ? 'Очень внимательный врач, объяснили весь план лечения.'
+              : 'Дәрігер өте мұқият, қабылдау сапалы өтті.',
+            isApproved: true,
+          },
+        });
+      }
+    }
+
+    if (status === 'CANCELLED' && tableMap.refunds && payment) {
+      await prisma.refund.create({
+        data: {
+          paymentId: payment.id,
+          clientId: client.id,
+          amount: service.price,
+          reason: 'Отмена по семейным обстоятельствам / Отбасылық себеп',
+          status: i % 2 === 0 ? 'APPROVED' : 'PENDING',
+          processedBy: i % 2 === 0 ? adminRu.id : null,
+          processedAt: i % 2 === 0 ? new Date() : null,
+        },
+      });
+    }
   }
 
-  console.log('\n✅ База данных успешно заполнена!');
-  console.log('\n📋 Кіру деректері:');
-  console.log('   Әкімші:');
-  console.log('   - Email: admin@dentreserve.com');
-  console.log('   - Пароль: admin123');
-  console.log('\n👨‍⚕️ Дәрігерлер (20 дана):');
-  createdDoctors.forEach((doc, index) => {
-    console.log(`   ${index + 1}. ${doc.name}`);
-    console.log(`      Email: ${doc.email}`);
-    console.log(`      Пароль: ${doc.password}`);
-  });
-  console.log('\n💡 Енді сіз:');
-  console.log('   • Әкімші немесе кез келген дәрігер ретінде кіре аласыз');
-  console.log('   • Интерфейс арқылы клиенттерді тіркеуге болады');
-  console.log('   • Жазылулар, төлемдер жасап және жүйемен жұмыс істей аласыз');
+  console.log('💸 Создание расходов...');
+  const expensesData = [
+    ['RENT', 450000, 'Аренда помещения / Ғимарат жалдау'],
+    ['SALARY', 1200000, 'ФОТ персонала / Қызметкерлер жалақысы'],
+    ['SUPPLIES', 280000, 'Расходные материалы / Шығыс материалдары'],
+    ['EQUIPMENT', 760000, 'Стоматологическое оборудование / Жабдықтар'],
+    ['UTILITIES', 120000, 'Коммунальные услуги / Коммуналдық төлемдер'],
+    ['OTHER', 90000, 'Маркетинг и реклама / Маркетинг және жарнама'],
+  ];
+  if (tableMap.expenses) {
+    for (const [category, amount, description] of expensesData) {
+      await prisma.expense.create({
+        data: {
+          category,
+          amount: toDecimal(amount),
+          description,
+          expenseDate: new Date('2026-04-15T00:00:00.000Z'),
+          createdBy: adminKk.id,
+        },
+      });
+    }
+  }
+
+  console.log('📩 Создание обращений с сайта...');
+  const messages = [
+    ['Николай', 'nikolay@example.com', '+77045550101', 'Здравствуйте, есть ли свободное время на завтра после 18:00?'],
+    ['Мадина', 'madina@example.kz', '+77045550102', 'Сәлеметсіз бе, балалар стоматологына сенбіге жазылуға бола ма?'],
+    ['Алия', 'aliya@example.kz', '+77045550103', 'Имплантация бойынша консультация бағасын нақтылағым келеді.'],
+    ['Roman', 'roman@example.ru', '+77045550104', 'Нужна срочная запись, острая зубная боль.'],
+  ];
+  if (tableMap.contactMessages) {
+    for (const [name, email, phone, message] of messages) {
+      await prisma.contactMessage.create({
+        data: {
+          name,
+          email,
+          phone,
+          message,
+          isRead: false,
+        },
+      });
+    }
+  }
+
+  if (tableMap.auditLogs) {
+    console.log('📋 Демо-записи audit log...');
+    await prisma.auditLog.createMany({
+      data: [
+        {
+          userId: adminRu.id,
+          action: 'LOGIN',
+          entityType: 'User',
+          entityId: adminRu.id,
+          changes: '{"source":"seed"}',
+          ipAddress: '127.0.0.1',
+          userAgent: 'DentLux seed script',
+        },
+        {
+          userId: adminKk.id,
+          action: 'CREATE',
+          entityType: 'Service',
+          entityId: services[0]?.id,
+          changes: '{"message":"seed demo"}',
+          ipAddress: '127.0.0.1',
+          userAgent: 'DentLux seed script',
+        },
+      ],
+    });
+  }
+
+  console.log('\n✅ Заполнение завершено успешно.');
+  console.log(`👤 Админы: ${adminRu.email}, ${adminKk.email}`);
+  console.log(`🔐 Единый пароль для seed-пользователей: ${DEFAULT_PASSWORD}`);
+  console.log(`🧑 Клиенты: ${clients.length}, 👨‍⚕️ Врачи: ${doctors.length}, 🦷 Услуги: ${services.length}`);
 }
 
 main()
